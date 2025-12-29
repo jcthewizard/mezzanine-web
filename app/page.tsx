@@ -127,6 +127,170 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Portfolio Section */}
+      <section className="py-32 lg:py-40 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="flex flex-col md:flex-row md:items-end md:justify-between mb-16"
+          >
+            <div>
+              <p className="text-red text-sm tracking-[0.2em] uppercase mb-6">
+                Featured Portfolio
+              </p>
+              <h2 className="font-serif text-4xl md:text-5xl text-charcoal leading-tight">
+                Select Investments
+              </h2>
+            </div>
+            <p className="text-slate max-w-md mt-6 md:mt-0">
+              A curated selection from our portfolio of commercial real estate
+              investments across the Pacific Northwest.
+            </p>
+          </motion.div>
+
+          {/* Portfolio Grid - Asymmetric Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Large Featured Image */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="lg:col-span-7 group relative overflow-hidden"
+            >
+              <div className="aspect-[4/3] lg:aspect-[16/12] overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop"
+                  alt="Modern Office Tower"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute bottom-0 left-0 right-0 p-8 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                <p className="text-white/70 text-sm tracking-wide mb-2">Office Tower</p>
+                <h3 className="font-serif text-2xl text-white">Metropolitan Center</h3>
+                <p className="text-white/60 text-sm mt-2">Seattle, WA</p>
+              </div>
+            </motion.div>
+
+            {/* Right Column - Stacked Images */}
+            <div className="lg:col-span-5 grid grid-cols-1 gap-6">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+                className="group relative overflow-hidden"
+              >
+                <div className="aspect-[16/9] overflow-hidden">
+                  <img
+                    src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2070&auto=format&fit=crop"
+                    alt="Luxury Residential Complex"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                  <p className="text-white/70 text-sm tracking-wide mb-1">Mixed-Use Development</p>
+                  <h3 className="font-serif text-xl text-white">Bellevue Towers</h3>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="group relative overflow-hidden"
+              >
+                <div className="aspect-[16/9] overflow-hidden">
+                  <img
+                    src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop"
+                    alt="Modern Office Space"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                  <p className="text-white/70 text-sm tracking-wide mb-1">Class A Office</p>
+                  <h3 className="font-serif text-xl text-white">Innovation Campus</h3>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Second Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="group relative overflow-hidden"
+            >
+              <div className="aspect-[4/3] overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1577495508048-b635879837f1?q=80&w=2074&auto=format&fit=crop"
+                  alt="Retail Development"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                <p className="text-white/70 text-sm tracking-wide mb-1">Retail</p>
+                <h3 className="font-serif text-xl text-white">Harbor Square</h3>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="group relative overflow-hidden"
+            >
+              <div className="aspect-[4/3] overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1464938050520-ef2571f00eb9?q=80&w=2074&auto=format&fit=crop"
+                  alt="Industrial Warehouse"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                <p className="text-white/70 text-sm tracking-wide mb-1">Industrial</p>
+                <h3 className="font-serif text-xl text-white">Pacific Logistics</h3>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="group relative overflow-hidden"
+            >
+              <div className="aspect-[4/3] overflow-hidden">
+                <img
+                  src="https://images.unsplash.com/photo-1582407947810-f797428a0448?q=80&w=2940&auto=format&fit=crop"
+                  alt="Corporate Headquarters"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                <p className="text-white/70 text-sm tracking-wide mb-1">Corporate HQ</p>
+                <h3 className="font-serif text-xl text-white">Cascade Tower</h3>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Stats Section */}
       <section className="py-24 bg-charcoal">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
