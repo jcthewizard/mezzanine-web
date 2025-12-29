@@ -88,3 +88,34 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--slate);
 }
+
+/* Hide scrollbar for news ticker */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ticker tape animation */
+.ticker-container {
+  animation: ticker-scroll 60s linear infinite;
+  display: flex;
+  width: fit-content;
+  align-items: center;
+}
+
+.ticker-container:hover {
+  animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, LineChart, Users, ArrowUpRight } from "lucide-react";
 import Hero from "@/components/Hero";
 import ServiceCard from "@/components/ServiceCard";
+import FDICNews from "@/components/FDICNews";
 
 const services = [
   {
@@ -90,6 +91,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* FDIC News Strip */}
+      <FDICNews />
 
       {/* Services Section */}
       <section className="py-32 lg:py-40 bg-cream">
