@@ -54,7 +54,7 @@ export default function Header() {
                 className={`text-sm tracking-wide transition-colors ${
                   isScrolled
                     ? "text-charcoal hover:text-red"
-                    : "text-charcoal/80 hover:text-charcoal"
+                    : "text-white/90 hover:text-white"
                 }`}
               >
                 {link.label}
@@ -65,7 +65,7 @@ export default function Header() {
               className={`text-sm tracking-wide px-6 py-3 transition-all ${
                 isScrolled
                   ? "bg-red text-white hover:bg-red-dark"
-                  : "bg-charcoal text-white hover:bg-charcoal-light"
+                  : "bg-white text-charcoal hover:bg-white/90"
               }`}
             >
               Get in Touch
@@ -74,7 +74,9 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 relative z-10 text-charcoal"
+            className={`md:hidden p-2 relative z-10 transition-colors ${
+              isScrolled || isMenuOpen ? "text-charcoal" : "text-white"
+            }`}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
