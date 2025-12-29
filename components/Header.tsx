@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,26 +35,20 @@ export default function Header() {
           {/* Logo - swaps between light and dark versions */}
           <Link href="/" className="relative z-10">
             {/* Light logo for dark hero background */}
-            <Image
-              src="/logo-light.png"
+            <img
+              src="/mezzanine-web/logo-light.png"
               alt="Mezzanine Properties, Inc."
-              width={500}
-              height={125}
               className={`h-24 w-auto absolute transition-opacity duration-500 ${
                 isScrolled ? "opacity-0" : "opacity-100"
               }`}
-              priority
             />
             {/* Dark logo for scrolled white header */}
-            <Image
-              src="/logo.png"
+            <img
+              src="/mezzanine-web/logo.png"
               alt="Mezzanine Properties, Inc."
-              width={500}
-              height={125}
               className={`h-24 w-auto transition-opacity duration-500 ${
                 isScrolled ? "opacity-100" : "opacity-0"
               }`}
-              priority
             />
           </Link>
 

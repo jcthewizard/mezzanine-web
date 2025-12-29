@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -17,11 +16,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
           {/* Logo & Description */}
           <div className="lg:col-span-5">
-            <Image
-              src="/icon.png"
+            <img
+              src="/mezzanine-web/icon.png"
               alt="Mezzanine Properties, Inc."
-              width={80}
-              height={80}
               className="h-16 w-16 mb-8"
             />
             <p className="text-white/50 leading-relaxed max-w-sm">
