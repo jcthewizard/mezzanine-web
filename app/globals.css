@@ -1,26 +1,90 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Refined Palette - Harmonizing with Red Logo */
+  --charcoal: #1C1C1C;
+  --charcoal-light: #2A2A2A;
+  --red: #E31B23;
+  --red-dark: #C41920;
+  --cream: #FAF9F7;
+  --warm-white: #FFFFFF;
+  --slate: #5A5A5A;
+  --slate-light: #8A8A8A;
+  --border: #E5E3E0;
+
+  /* Theme */
+  --background: #FFFFFF;
+  --foreground: #1C1C1C;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-charcoal: var(--charcoal);
+  --color-charcoal-light: var(--charcoal-light);
+  --color-red: var(--red);
+  --color-red-dark: var(--red-dark);
+  --color-cream: var(--cream);
+  --color-slate: var(--slate);
+  --color-slate-light: var(--slate-light);
+  --color-border: var(--border);
+  --font-serif: var(--font-libre);
+  --font-sans: var(--font-dm-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Selection matches logo red */
+::selection {
+  background-color: var(--red);
+  color: white;
+}
+
+/* Refined heading styles - matching logo's serif feel */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+/* Subtle link transitions */
+a {
+  transition: all 0.3s ease;
+}
+
+/* Refined focus states */
+*:focus-visible {
+  outline: 1px solid var(--red);
+  outline-offset: 3px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--slate-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--slate);
 }

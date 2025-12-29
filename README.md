@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mezzanine Properties, Inc.
+
+A modern, luxurious website for Mezzanine Properties, Inc. - a commercial real estate and asset management company based in Bellevue, Washington.
+
+## Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Styling**: Tailwind CSS v4
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **Fonts**: Montserrat (headings) + DM Sans (body)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### Installation
 
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+mezzanine-v2/
+├── app/
+│   ├── layout.tsx          # Root layout with header/footer
+│   ├── page.tsx            # Home page
+│   ├── globals.css         # Global styles and brand colors
+│   ├── about/page.tsx      # About Us page
+│   └── contact/page.tsx    # Contact page
+├── components/
+│   ├── Header.tsx          # Navigation with logo
+│   ├── Footer.tsx          # Contact info, links
+│   ├── Hero.tsx            # Homepage hero section
+│   ├── ServiceCard.tsx     # Service cards component
+│   ├── ContactForm.tsx     # Contact form component
+│   └── ScrollToTop.tsx     # Scroll to top button
+├── public/
+│   └── logo.png            # Company logo
+└── ...config files
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Brand Colors
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Primary Red**: #E31B23
+- **Charcoal Black**: #1A1A1A
+- **Warm Cream**: #FAF9F6
+- **Stone Gray**: #6B6B6B
 
-## Deploy on Vercel
+## Contact
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Phone**: 888.262.2835
+- **Email**: contact@mezzinc.com
+- **Address**: 11245 SE 6th Street Suite 280, Bellevue, WA 98004

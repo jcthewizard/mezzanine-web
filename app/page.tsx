@@ -1,65 +1,192 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { TrendingUp, LineChart, Users, ArrowUpRight } from "lucide-react";
+import Hero from "@/components/Hero";
+import ServiceCard from "@/components/ServiceCard";
+
+const services = [
+  {
+    title: "Investment Opportunities",
+    description:
+      "We identify assets in transitional situations—receivership, partnership changes, or market dislocations—and create value through strategic repositioning.",
+    icon: TrendingUp,
+  },
+  {
+    title: "Market Intelligence",
+    description:
+      "Deep insight into market timing, sector performance, and capital market trends informs every investment decision we make on behalf of our clients.",
+    icon: LineChart,
+  },
+  {
+    title: "Client Services",
+    description:
+      "We build lasting relationships founded on trust. Our clients receive tailored strategies and dedicated attention befitting their investment goals.",
+    icon: Users,
+  },
+  {
+    title: "Exit Planning",
+    description:
+      "Strategic positioning from day one ensures optimal outcomes. We plan for success, navigating competitive markets with precision and foresight.",
+    icon: ArrowUpRight,
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      {/* Hero Section */}
+      <Hero />
+
+      {/* Introduction Section */}
+      <section className="py-32 lg:py-40 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+            {/* Left Content */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <p className="text-red text-sm tracking-[0.2em] uppercase mb-6">
+                Our Approach
+              </p>
+              <h2 className="font-serif text-4xl md:text-5xl text-charcoal leading-tight mb-8">
+                Experience You
+                <br />
+                Can Trust
+              </h2>
+              <div className="w-12 h-px bg-red mb-8" />
+            </motion.div>
+
+            {/* Right Content */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="space-y-6"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <p className="text-slate text-lg leading-relaxed">
+                Mezzanine Properties, Inc. provides comprehensive advice, execution,
+                asset management, and investment management services to clients engaged
+                in buying, selling, investing in, financing, or developing real estate.
+              </p>
+              <p className="text-slate leading-relaxed">
+                Our solutions are tailored to meet the objectives of private and
+                institutional owners and investors, as well as corporate owners and
+                occupiers seeking strategic real estate counsel.
+              </p>
+              <Link
+                href="/about"
+                className="inline-flex items-center gap-2 text-charcoal text-sm tracking-wide hover:text-red transition-colors group mt-4"
+              >
+                About Our Firm
+                <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </Link>
+            </motion.div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </section>
+
+      {/* Services Section */}
+      <section className="py-32 lg:py-40 bg-cream">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-2xl mb-20"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <p className="text-red text-sm tracking-[0.2em] uppercase mb-6">
+              What We Do
+            </p>
+            <h2 className="font-serif text-4xl md:text-5xl text-charcoal leading-tight">
+              Expertise Across the
+              <br />
+              Investment Lifecycle
+            </h2>
+          </motion.div>
+
+          {/* Services Grid */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {services.map((service, index) => (
+              <ServiceCard
+                key={service.title}
+                title={service.title}
+                description={service.description}
+                icon={service.icon}
+                index={index}
+              />
+            ))}
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-24 bg-charcoal">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+            {[
+              { value: "20+", label: "Years Experience" },
+              { value: "$500M+", label: "Assets Managed" },
+              { value: "100+", label: "Transactions" },
+              { value: "98%", label: "Client Retention" },
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="text-center lg:text-left"
+              >
+                <p className="font-serif text-4xl lg:text-5xl text-white mb-2">
+                  {stat.value}
+                </p>
+                <p className="text-white/50 text-sm tracking-wide">
+                  {stat.label}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-32 lg:py-40 bg-white">
+        <div className="max-w-4xl mx-auto px-6 lg:px-12 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <p className="text-red text-sm tracking-[0.2em] uppercase mb-6">
+              Let&apos;s Connect
+            </p>
+            <h2 className="font-serif text-4xl md:text-5xl text-charcoal leading-tight mb-8">
+              Ready to Explore
+              <br />
+              Opportunities?
+            </h2>
+            <p className="text-slate text-lg max-w-xl mx-auto mb-12">
+              We welcome the opportunity to discuss how Mezzanine Properties
+              can help you achieve your investment objectives.
+            </p>
+            <Link
+              href="/contact"
+              className="inline-flex items-center justify-center px-10 py-4 bg-red text-white text-sm tracking-wide hover:bg-red-dark transition-colors"
+            >
+              Start a Conversation
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+    </>
   );
 }
