@@ -32,7 +32,7 @@ export default function Hero() {
             </p>
 
             {/* Main Heading */}
-            <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl text-white leading-[1.1] mb-8">
+            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-white leading-[1.15] mb-8">
               Building Wealth
               <br />
               Through Strategic
@@ -77,20 +77,6 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1 }}
-          className="absolute bottom-12 right-6 lg:right-12 hidden md:flex flex-col items-center gap-2"
-        >
-          <span className="text-white/50 text-xs tracking-wider uppercase">Scroll</span>
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-px h-8 bg-gradient-to-b from-white/50 to-transparent"
-          />
-        </motion.div>
       </div>
 
       {/* Bottom border */}

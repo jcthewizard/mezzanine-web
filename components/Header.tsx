@@ -33,14 +33,28 @@ export default function Header() {
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="flex items-center justify-between h-24">
-          {/* Logo */}
+          {/* Logo - swaps between light and dark versions */}
           <Link href="/" className="relative z-10">
+            {/* Light logo for dark hero background */}
+            <Image
+              src="/logo-light.png"
+              alt="Mezzanine Properties, Inc."
+              width={500}
+              height={125}
+              className={`h-24 w-auto absolute transition-opacity duration-500 ${
+                isScrolled ? "opacity-0" : "opacity-100"
+              }`}
+              priority
+            />
+            {/* Dark logo for scrolled white header */}
             <Image
               src="/logo.png"
               alt="Mezzanine Properties, Inc."
               width={500}
               height={125}
-              className="h-24 w-auto"
+              className={`h-24 w-auto transition-opacity duration-500 ${
+                isScrolled ? "opacity-100" : "opacity-0"
+              }`}
               priority
             />
           </Link>

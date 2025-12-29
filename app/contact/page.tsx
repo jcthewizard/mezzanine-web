@@ -1,49 +1,47 @@
 "use client";
 
-import Image from "next/image";
 import { motion } from "framer-motion";
 import ContactForm from "@/components/ContactForm";
 
 export default function ContactPage() {
   return (
     <>
-      {/* Hero Section */}
-      <section className="relative pt-40 pb-32 lg:pt-48 lg:pb-40 bg-cream overflow-hidden">
+      {/* Hero Section with Background Image */}
+      <section className="relative min-h-[70vh] flex items-center overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1582407947810-f797428a0448?q=80&w=2940&auto=format&fit=crop"
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-charcoal/90 via-charcoal/70 to-charcoal/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-charcoal/20" />
+        </div>
 
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 relative z-10">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-32 relative z-10 w-full">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
             className="max-w-3xl"
           >
             <p className="text-red text-sm tracking-[0.3em] uppercase mb-8">
               Contact
             </p>
-            <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl text-charcoal leading-[1.1] mb-8">
+            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-white leading-[1.15] mb-8">
               Let&apos;s Start a
               <br />
               Conversation
             </h1>
-            <p className="text-slate text-lg md:text-xl max-w-xl leading-relaxed">
+            <p className="text-white/80 text-lg md:text-xl max-w-xl leading-relaxed">
               We welcome inquiries from investors, partners, and those
               seeking strategic real estate counsel.
             </p>
           </motion.div>
         </div>
 
-        {/* Decorative - logo icon */}
-        <div className="absolute right-12 lg:right-24 top-1/2 -translate-y-1/2 hidden lg:block">
-          <Image
-            src="/icon.png"
-            alt=""
-            width={200}
-            height={200}
-            className="w-48 h-48"
-          />
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-border" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-white/10" />
       </section>
 
       {/* Contact Section */}
