@@ -51,7 +51,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`font-serif text-sm tracking-wide transition-colors ${
+                className={`text-sm tracking-wide transition-colors ${
                   isScrolled
                     ? "text-charcoal hover:text-red"
                     : "text-charcoal/80 hover:text-charcoal"
@@ -62,7 +62,7 @@ export default function Header() {
             ))}
             <Link
               href="/contact"
-              className={`font-serif text-sm tracking-wide px-6 py-3 transition-all ${
+              className={`text-sm tracking-wide px-6 py-3 transition-all ${
                 isScrolled
                   ? "bg-red text-white hover:bg-red-dark"
                   : "bg-charcoal text-white hover:bg-charcoal-light"
@@ -103,7 +103,7 @@ export default function Header() {
                 >
                   <Link
                     href={link.href}
-                    className="text-charcoal text-2xl font-serif tracking-wide hover:text-red transition-colors"
+                    className="text-charcoal text-2xl tracking-wide hover:text-red transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {link.label}

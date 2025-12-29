@@ -180,7 +180,7 @@ export default function Home() {
             </p>
             <Link
               href="/contact"
-              className="inline-flex items-center justify-center px-10 py-4 bg-red text-white font-serif text-sm tracking-wide hover:bg-red-dark transition-colors"
+              className="inline-flex items-center justify-center px-10 py-4 bg-red text-white text-sm tracking-wide hover:bg-red-dark transition-colors"
             >
               Start a Conversation
             </Link>
