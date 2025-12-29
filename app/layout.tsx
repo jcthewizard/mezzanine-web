@@ -30,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${libreBaskerville.variable} ${dmSans.variable} antialiased`}>
+      <body className={`${libreBaskerville.variable} ${dmSans.variable} antialiased font-serif`}>
         <Header />
         <main>
           {children}

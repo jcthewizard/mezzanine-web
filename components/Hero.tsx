@@ -40,13 +40,13 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center px-8 py-4 bg-red text-white text-sm tracking-wide hover:bg-red-dark transition-colors"
+                className="inline-flex items-center justify-center px-8 py-4 bg-red text-white font-serif text-sm tracking-wide hover:bg-red-dark transition-colors"
               >
                 Start a Conversation
               </Link>
               <Link
                 href="/about"
-                className="inline-flex items-center justify-center px-8 py-4 border border-charcoal/20 text-charcoal text-sm tracking-wide hover:border-charcoal/40 transition-colors"
+                className="inline-flex items-center justify-center px-8 py-4 border border-charcoal/20 text-charcoal font-serif text-sm tracking-wide hover:border-charcoal/40 transition-colors"
               >
                 Learn More
               </Link>

@@ -210,7 +210,7 @@ export default function AboutPage() {
             </p>
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 px-10 py-4 bg-red text-white text-sm tracking-wide hover:bg-red-dark transition-colors group"
+              className="inline-flex items-center gap-2 px-10 py-4 bg-red text-white font-serif text-sm tracking-wide hover:bg-red-dark transition-colors group"
             >
               Get in Touch
               <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
