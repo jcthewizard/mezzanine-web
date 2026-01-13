@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,31 +25,34 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled
-          ? "bg-white/98 backdrop-blur-sm shadow-sm"
-          : "bg-transparent"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
+        ? "bg-white/98 backdrop-blur-sm shadow-sm"
+        : "bg-transparent"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div className="flex items-center justify-between h-24">
           {/* Logo - swaps between light and dark versions */}
           <Link href="/" className="relative z-10">
             {/* Light logo for dark hero background */}
-            <img
+            <Image
               src="/logo-light.png"
               alt="Mezzanine Properties, Inc."
-              className={`h-24 w-auto absolute transition-opacity duration-500 ${
-                isScrolled ? "opacity-0" : "opacity-100"
-              }`}
+              width={200}
+              height={96}
+              priority
+              className={`h-24 w-auto absolute transition-opacity duration-500 ${isScrolled ? "opacity-0" : "opacity-100"
+                }`}
             />
             {/* Dark logo for scrolled white header */}
-            <img
+            <Image
               src="/logo.png"
               alt="Mezzanine Properties, Inc."
-              className={`h-24 w-auto transition-opacity duration-500 ${
-                isScrolled ? "opacity-100" : "opacity-0"
-              }`}
+              width={200}
+              height={96}
+              priority
+              className={`h-24 w-auto transition-opacity duration-500 ${isScrolled ? "opacity-100" : "opacity-0"
+                }`}
             />
           </Link>
 
@@ -58,22 +62,20 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm tracking-wide transition-colors ${
-                  isScrolled
-                    ? "text-charcoal hover:text-red"
-                    : "text-white/90 hover:text-white"
-                }`}
+                className={`text-sm tracking-wide transition-colors ${isScrolled
+                  ? "text-charcoal hover:text-red"
+                  : "text-white/90 hover:text-white"
+                  }`}
               >
                 {link.label}
               </Link>
             ))}
             <Link
               href="/contact"
-              className={`text-sm tracking-wide px-6 py-3 transition-all ${
-                isScrolled
-                  ? "bg-red text-white hover:bg-red-dark"
-                  : "bg-white text-charcoal hover:bg-white/90"
-              }`}
+              className={`text-sm tracking-wide px-6 py-3 transition-all ${isScrolled
+                ? "bg-red text-white hover:bg-red-dark"
+                : "bg-white text-charcoal hover:bg-white/90"
+                }`}
             >
               Get in Touch
             </Link>
@@ -81,9 +83,8 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <button
-            className={`md:hidden p-2 relative z-10 transition-colors ${
-              isScrolled || isMenuOpen ? "text-charcoal" : "text-white"
-            }`}
+            className={`md:hidden p-2 relative z-10 transition-colors ${isScrolled || isMenuOpen ? "text-charcoal" : "text-white"
+              }`}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
