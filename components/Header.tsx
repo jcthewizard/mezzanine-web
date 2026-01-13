@@ -36,7 +36,7 @@ export default function Header() {
           <Link href="/" className="relative z-10">
             {/* Light logo for dark hero background */}
             <Image
-              src="/logo-light.png"
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo-light.png`}
               alt="Mezzanine Properties, Inc."
               width={200}
               height={96}
@@ -46,7 +46,7 @@ export default function Header() {
             />
             {/* Dark logo for scrolled white header */}
             <Image
-              src="/logo.png"
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`}
               alt="Mezzanine Properties, Inc."
               width={200}
               height={96}
