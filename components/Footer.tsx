@@ -17,7 +17,7 @@ export default function Footer() {
           {/* Logo & Description */}
           <div className="lg:col-span-5">
             <img
-              src="/mezzanine-web/icon.png"
+              src="/icon.png"
               alt="Mezzanine Properties, Inc."
               className="h-16 w-16 mb-8"
             />

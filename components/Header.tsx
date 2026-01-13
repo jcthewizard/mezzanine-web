@@ -36,7 +36,7 @@ export default function Header() {
           <Link href="/" className="relative z-10">
             {/* Light logo for dark hero background */}
             <img
-              src="/mezzanine-web/logo-light.png"
+              src="/logo-light.png"
               alt="Mezzanine Properties, Inc."
               className={`h-24 w-auto absolute transition-opacity duration-500 ${
                 isScrolled ? "opacity-0" : "opacity-100"
@@ -44,7 +44,7 @@ export default function Header() {
             />
             {/* Dark logo for scrolled white header */}
             <img
-              src="/mezzanine-web/logo.png"
+              src="/logo.png"
               alt="Mezzanine Properties, Inc."
               className={`h-24 w-auto transition-opacity duration-500 ${
                 isScrolled ? "opacity-100" : "opacity-0"

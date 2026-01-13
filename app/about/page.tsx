@@ -74,76 +74,50 @@ export default function AboutPage() {
 
       {/* Story Section */}
       <section className="py-32 lg:py-40 bg-white">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24">
-            {/* Left - Visual */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="relative"
-            >
-              <div className="aspect-[4/5] bg-cream relative">
-                {/* Decorative frame */}
-                <div className="absolute inset-8 border border-border" />
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-4xl mx-auto"
+          >
+            <p className="text-red text-sm tracking-[0.2em] uppercase mb-6">
+              Our Story
+            </p>
+            <h2 className="font-serif text-4xl md:text-5xl text-charcoal leading-tight mb-8">
+              A Legacy of
+              <br />
+              Trusted Counsel
+            </h2>
+            <div className="w-12 h-px bg-red mb-16" />
 
-                {/* Quote */}
-                <div className="absolute bottom-0 left-0 right-0 p-8 bg-white">
-                  <p className="font-serif text-xl text-charcoal italic leading-relaxed">
-                    &ldquo;We believe in creating lasting value through
-                    strategic vision and disciplined execution.&rdquo;
-                  </p>
-                  <div className="mt-6 w-8 h-px bg-red" />
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Right - Content */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="lg:py-12"
-            >
-              <p className="text-red text-sm tracking-[0.2em] uppercase mb-6">
-                Our Story
+            <div className="space-y-8 text-slate leading-loose text-lg">
+              <p>
+                Mezzanine Properties, Inc. provides comprehensive advice, execution,
+                asset management, and investment management services to clients engaged
+                in buying, selling, investing in, financing, or developing real estate
+                and real estate-related assets.
               </p>
-              <h2 className="font-serif text-4xl text-charcoal leading-tight mb-8">
-                A Legacy of
-                <br />
-                Trusted Counsel
-              </h2>
-              <div className="w-12 h-px bg-red mb-8" />
-
-              <div className="space-y-6 text-slate leading-relaxed">
-                <p>
-                  Mezzanine Properties, Inc. provides comprehensive advice, execution,
-                  asset management, and investment management services to clients engaged
-                  in buying, selling, investing in, financing, or developing real estate
-                  and real estate-related assets.
-                </p>
-                <p>
-                  Our solutions are tailored to meet the objectives of private and
-                  institutional owners and investors, as well as corporate owners and
-                  occupiers. We take pride in our ability to navigate complex transactions
-                  and deliver exceptional outcomes.
-                </p>
-                <p>
-                  Based in Bellevue, Washington, we serve clients throughout the
-                  Pacific Northwest and beyond, combining local expertise with a
-                  sophisticated national perspective.
-                </p>
-              </div>
-            </motion.div>
-          </div>
+              <p>
+                Our solutions are tailored to meet the objectives of private and
+                institutional owners and investors, as well as corporate owners and
+                occupiers. We take pride in our ability to navigate complex transactions
+                and deliver exceptional outcomes.
+              </p>
+              <p>
+                Based in Bellevue, Washington, we serve clients throughout the
+                Pacific Northwest and beyond, combining local expertise with a
+                sophisticated national perspective.
+              </p>
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Values Section */}
       <section className="py-32 lg:py-40 bg-cream">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -187,7 +161,7 @@ export default function AboutPage() {
 
       {/* CTA Section */}
       <section className="py-32 lg:py-40 bg-white">
-        <div className="max-w-4xl mx-auto px-6 lg:px-12 text-center">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -197,12 +171,12 @@ export default function AboutPage() {
             <p className="text-red text-sm tracking-[0.2em] uppercase mb-6">
               Work With Us
             </p>
-            <h2 className="font-serif text-4xl md:text-5xl text-charcoal leading-tight mb-8">
+            <h2 className="font-serif text-4xl md:text-5xl text-charcoal leading-tight mb-10">
               Let&apos;s Build Something
               <br />
               Together
             </h2>
-            <p className="text-slate text-lg max-w-xl mx-auto mb-12">
+            <p className="text-slate text-lg leading-relaxed max-w-2xl mx-auto mb-16">
               We welcome the opportunity to discuss how our expertise
               can serve your investment objectives.
             </p>
