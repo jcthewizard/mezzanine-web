@@ -17,7 +17,7 @@ export default function Footer() {
           {/* Logo & Description */}
           <div className="lg:col-span-5">
             <img
-              src="/icon.png"
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/icon.png`}
               alt="Mezzanine Properties, Inc."
               className="h-16 w-16 mb-8"
             />
