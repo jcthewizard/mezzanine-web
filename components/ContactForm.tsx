@@ -37,7 +37,7 @@ export default function ContactForm() {
     );
   }
 
-  const inputClasses = "w-full px-0 py-4 bg-transparent border-0 border-b border-border focus:border-red focus:ring-0 outline-none transition-colors text-charcoal placeholder:text-slate-light";
+  const inputClasses = "w-full px-0 py-4 bg-transparent border-0 border-b border-border focus:border-charcoal focus:ring-0 outline-none transition-colors text-charcoal placeholder:text-slate-light";
   const labelClasses = "block text-xs tracking-wider text-slate-light uppercase mb-1";
 
   return (

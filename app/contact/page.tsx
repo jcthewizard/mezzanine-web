@@ -123,6 +123,16 @@ export default function ContactPage() {
                   </p>
                 </div>
               </div>
+
+              {/* Minimum Investment Notice */}
+              <div className="mt-12 pt-8 border-t border-slate-light/20">
+                <p className="text-xs tracking-wider text-slate-light uppercase mb-2">
+                  Investment Requirement
+                </p>
+                <p className="text-charcoal">
+                  Minimum Relationship $5M
+                </p>
+              </div>
             </motion.div>
 
             {/* Right - Contact Form */}
