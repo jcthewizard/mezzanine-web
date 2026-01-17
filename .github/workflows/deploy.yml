@@ -33,7 +33,6 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_BASE_PATH: /mezzanine-web
           NEXT_PUBLIC_FRED_API_KEY: ${{ secrets.NEXT_PUBLIC_FRED_API_KEY }}
 
       - name: Upload artifact
