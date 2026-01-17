@@ -21,6 +21,17 @@ export const metadata: Metadata = {
   title: "Mezzanine Properties, Inc. | Commercial Real Estate & Asset Management",
   description: "Mezzanine Properties provides comprehensive advice, execution, asset management, and investment management services for real estate and real estate-related assets.",
   keywords: ["commercial real estate", "asset management", "investment management", "Bellevue", "real estate investment"],
+  metadataBase: new URL('https://mezzinc.com'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: "Mezzanine Properties, Inc. | Commercial Real Estate & Asset Management",
+    description: "Mezzanine Properties provides comprehensive advice, execution, asset management, and investment management services for real estate and real estate-related assets.",
+    url: 'https://mezzinc.com',
+    siteName: 'Mezzanine Properties, Inc.',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

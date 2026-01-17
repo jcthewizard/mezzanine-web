@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mezzinc.com/sitemap.xml
