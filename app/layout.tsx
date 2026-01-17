@@ -25,12 +25,24 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
   openGraph: {
     title: "Mezzanine Properties, Inc. | Commercial Real Estate & Asset Management",
     description: "Mezzanine Properties provides comprehensive advice, execution, asset management, and investment management services for real estate and real estate-related assets.",
     url: 'https://mezzinc.com',
     siteName: 'Mezzanine Properties, Inc.',
     type: 'website',
+    images: [
+      {
+        url: '/icon.png',
+        width: 512,
+        height: 512,
+        alt: 'Mezzanine Properties Inc Logo',
+      },
+    ],
   },
 };
 
