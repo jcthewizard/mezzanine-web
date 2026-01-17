@@ -6,6 +6,7 @@ import { TrendingUp, LineChart, Users, ArrowUpRight } from "lucide-react";
 import Hero from "@/components/Hero";
 import ServiceCard from "@/components/ServiceCard";
 import NewsSection from "@/components/NewsSection";
+import RatesCharts from "@/components/RatesCharts";
 
 const services = [
   {
@@ -94,6 +95,9 @@ export default function Home() {
 
       {/* News Section */}
       <NewsSection />
+
+      {/* Interest Rate Charts */}
+      <RatesCharts />
 
       {/* Services Section */}
       <section className="py-32 lg:py-40 bg-cream">
