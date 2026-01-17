@@ -36,22 +36,22 @@ export default function Header() {
           <Link href="/" className="relative z-10">
             {/* Light logo for dark hero background */}
             <Image
-              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo-light.png`}
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/Mezzanine Properties Inc - Horizontal Logo - White High Res.png`}
               alt="Mezzanine Properties, Inc."
-              width={200}
-              height={96}
+              width={120}
+              height={48}
               priority
-              className={`h-24 w-auto absolute transition-opacity duration-500 ${isScrolled ? "opacity-0" : "opacity-100"
+              className={`h-12 w-auto absolute transition-opacity duration-500 ${isScrolled ? "opacity-0" : "opacity-100"
                 }`}
             />
             {/* Dark logo for scrolled white header */}
             <Image
-              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`}
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/Mezzanine Properties Inc - Horizontal Logo - Black High Res.png`}
               alt="Mezzanine Properties, Inc."
-              width={200}
-              height={96}
+              width={120}
+              height={48}
               priority
-              className={`h-24 w-auto transition-opacity duration-500 ${isScrolled ? "opacity-100" : "opacity-0"
+              className={`h-12 w-auto transition-opacity duration-500 ${isScrolled ? "opacity-100" : "opacity-0"
                 }`}
             />
           </Link>
