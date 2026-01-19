@@ -11,6 +11,7 @@ import {
     ResponsiveContainer,
     CartesianGrid,
 } from "recharts";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface RateData {
     date: string;
@@ -21,7 +22,6 @@ interface RatesData {
     sofr: RateData[];
     obfr: RateData[];
     effr: RateData[];
-    libor: RateData[];
 }
 
 type TimeRange = "30d" | "90d" | "1y" | "ytd";
@@ -42,18 +42,13 @@ const RATE_INFO = {
         fullName: "Effective Federal Funds Rate",
         color: "#8B4513",
     },
-    libor: {
-        name: "LIBOR",
-        fullName: "3-Month USD LIBOR (2020-2023)",
-        color: "#6B7280",
-    },
 };
 
 export default function RatesCharts() {
     const [ratesData, setRatesData] = useState<RatesData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
-    const [selectedRange, setSelectedRange] = useState<TimeRange>("30d");
+    const [selectedRange, setSelectedRange] = useState<TimeRange>("90d");
 
     useEffect(() => {
         fetchRates(selectedRange);
@@ -74,31 +69,13 @@ export default function RatesCharts() {
         }
 
         try {
-            // LIBOR static historical data (FRED removed the series in 2022)
-            // This represents 3-Month USD LIBOR from July 2020 to June 2023
-            const liborStaticData: RateData[] = [
-                { date: "2020-07-01", value: 0.30 },
-                { date: "2020-10-01", value: 0.24 },
-                { date: "2021-01-01", value: 0.22 },
-                { date: "2021-04-01", value: 0.18 },
-                { date: "2021-07-01", value: 0.13 },
-                { date: "2021-10-01", value: 0.14 },
-                { date: "2022-01-01", value: 0.47 },
-                { date: "2022-04-01", value: 1.41 },
-                { date: "2022-07-01", value: 2.99 },
-                { date: "2022-10-01", value: 4.54 },
-                { date: "2023-01-01", value: 4.99 },
-                { date: "2023-04-01", value: 5.21 },
-                { date: "2023-06-30", value: 5.33 },
-            ];
-
             const [sofr, obfr, effr] = await Promise.all([
                 fetchSeriesData("SOFR", startDate, apiKey),
                 fetchSeriesData("OBFR", startDate, apiKey),
                 fetchSeriesData("DFF", startDate, apiKey),
             ]);
 
-            setRatesData({ sofr, obfr, effr, libor: liborStaticData });
+            setRatesData({ sofr, obfr, effr });
         } catch (err) {
             console.error("Error fetching rates:", err);
             setError(true);
@@ -190,7 +167,6 @@ export default function RatesCharts() {
     ) => {
         const rateInfo = RATE_INFO[rateKey];
         const data = ratesData?.[rateKey] || [];
-        const isLibor = rateKey === "libor";
 
         return (
             <motion.div
@@ -199,27 +175,16 @@ export default function RatesCharts() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className={`bg-white border p-6 ${isLibor ? "border-slate/30 bg-slate/5" : "border-border"
-                    }`}
+                className="bg-white border border-border p-6"
             >
                 {/* Chart Header */}
                 <div className="mb-6">
                     <div className="flex items-start justify-between gap-3 mb-2">
-                        <h3 className={`text-lg font-medium ${isLibor ? "text-slate" : "text-charcoal"}`}>
+                        <h3 className="text-lg font-medium text-charcoal">
                             {rateInfo.name}
                         </h3>
-                        {isLibor && (
-                            <span className="px-2 py-1 bg-slate/20 text-slate text-xs font-medium tracking-wider">
-                                DISCONTINUED
-                            </span>
-                        )}
                     </div>
                     <p className="text-slate text-sm">{rateInfo.fullName}</p>
-                    {isLibor && (
-                        <p className="text-slate/80 text-xs mt-2 italic">
-                            Historical data only • Discontinued June 30, 2023
-                        </p>
-                    )}
                 </div>
 
                 {/* Chart */}
@@ -229,11 +194,7 @@ export default function RatesCharts() {
                     </div>
                 ) : error || data.length === 0 ? (
                     <div className="h-64 flex items-center justify-center">
-                        <p className="text-slate text-sm">
-                            {data.length === 0 && isLibor
-                                ? "No data available (LIBOR discontinued)"
-                                : "Unable to load data"}
-                        </p>
+                        <p className="text-slate text-sm">Unable to load data</p>
                     </div>
                 ) : (
                     <ResponsiveContainer width="100%" height={250}>
@@ -282,8 +243,6 @@ export default function RatesCharts() {
                                 strokeWidth={2}
                                 dot={false}
                                 activeDot={{ r: 4 }}
-                                strokeDasharray={isLibor ? "5 5" : undefined}
-                                opacity={isLibor ? 0.6 : 1}
                             />
                         </LineChart>
                     </ResponsiveContainer>
@@ -292,10 +251,8 @@ export default function RatesCharts() {
                 {/* Current Value */}
                 {!loading && !error && data.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-border">
-                        <p className="text-slate text-xs mb-1">
-                            {isLibor ? "Final Rate" : "Latest Rate"}
-                        </p>
-                        <p className={`text-2xl font-medium ${isLibor ? "text-slate" : "text-charcoal"}`}>
+                        <p className="text-slate text-xs mb-1">Latest Rate</p>
+                        <p className="text-2xl font-medium text-charcoal">
                             {data[data.length - 1].value.toFixed(3)}%
                         </p>
                         <p className="text-slate text-xs mt-1">
@@ -303,6 +260,178 @@ export default function RatesCharts() {
                         </p>
                     </div>
                 )}
+            </motion.div>
+        );
+    };
+
+    const renderSummaryCard = () => {
+        if (!ratesData || loading) {
+            return (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="bg-gradient-to-br from-cream to-white border border-border p-6"
+                >
+                    <div className="h-full flex items-center justify-center">
+                        <p className="text-slate text-sm">Loading comparison data...</p>
+                    </div>
+                </motion.div>
+            );
+        }
+
+        // Calculate trends and spreads
+        const calculateTrend = (data: RateData[]) => {
+            if (data.length < 2) return { change: 0, direction: "neutral" as "up" | "down" | "neutral" };
+            const first = data[0].value;
+            const last = data[data.length - 1].value;
+            const change = ((last - first) / first) * 100;
+            const direction: "up" | "down" | "neutral" = change > 0.01 ? "up" : change < -0.01 ? "down" : "neutral";
+            return { change, direction };
+        };
+
+        const sofrTrend = calculateTrend(ratesData.sofr);
+        const obfrTrend = calculateTrend(ratesData.obfr);
+        const effrTrend = calculateTrend(ratesData.effr);
+
+        const sofrCurrent = ratesData.sofr[ratesData.sofr.length - 1]?.value || 0;
+        const obfrCurrent = ratesData.obfr[ratesData.obfr.length - 1]?.value || 0;
+        const effrCurrent = ratesData.effr[ratesData.effr.length - 1]?.value || 0;
+
+        const sofrEffrSpread = sofrCurrent - effrCurrent;
+        const obfrEffrSpread = obfrCurrent - effrCurrent;
+
+        // Determine key insight
+        const rates = [
+            { name: "SOFR", value: sofrCurrent },
+            { name: "OBFR", value: obfrCurrent },
+            { name: "EFFR", value: effrCurrent },
+        ];
+        const leadingRate = rates.reduce((max, rate) =>
+            rate.value > max.value ? rate : max
+        );
+        const maxSpread = Math.max(Math.abs(sofrEffrSpread), Math.abs(obfrEffrSpread));
+
+        const TrendIcon = ({ direction }: { direction: "up" | "down" | "neutral" }) => {
+            if (direction === "up") return <TrendingUp size={14} className="text-red" />;
+            if (direction === "down") return <TrendingDown size={14} className="text-green-600" />;
+            return <Minus size={14} className="text-slate" />;
+        };
+
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="bg-gradient-to-br from-cream to-white border border-border p-6"
+            >
+                {/* Header */}
+                <div className="mb-6">
+                    <h3 className="text-lg font-medium text-charcoal mb-2">
+                        Rate Comparison Summary
+                    </h3>
+                    <p className="text-slate text-sm">
+                        Current rates and trends over selected period
+                    </p>
+                </div>
+
+                {/* Current Rates with Trends */}
+                <div className="space-y-4 mb-6">
+                    {/* SOFR */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-charcoal">SOFR</span>
+                            <div className="flex items-center gap-2">
+                                <TrendIcon direction={sofrTrend.direction} />
+                                <span className="text-sm text-slate">
+                                    {sofrTrend.change > 0 ? "+" : ""}{sofrTrend.change.toFixed(1)}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div
+                                className="h-2 bg-red/20 relative overflow-hidden flex-1"
+                            >
+                                <div
+                                    className="h-full bg-red transition-all duration-500"
+                                    style={{ width: `${(sofrCurrent / Math.max(sofrCurrent, obfrCurrent, effrCurrent)) * 100}%` }}
+                                />
+                            </div>
+                            <span className="text-lg font-medium text-charcoal min-w-[4rem] text-right">
+                                {sofrCurrent.toFixed(3)}%
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* OBFR */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-charcoal">OBFR</span>
+                            <div className="flex items-center gap-2">
+                                <TrendIcon direction={obfrTrend.direction} />
+                                <span className="text-sm text-slate">
+                                    {obfrTrend.change > 0 ? "+" : ""}{obfrTrend.change.toFixed(1)}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div
+                                className="h-2 bg-charcoal/20 relative overflow-hidden flex-1"
+                            >
+                                <div
+                                    className="h-full bg-charcoal transition-all duration-500"
+                                    style={{ width: `${(obfrCurrent / Math.max(sofrCurrent, obfrCurrent, effrCurrent)) * 100}%` }}
+                                />
+                            </div>
+                            <span className="text-lg font-medium text-charcoal min-w-[4rem] text-right">
+                                {obfrCurrent.toFixed(3)}%
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* EFFR */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-charcoal">EFFR</span>
+                            <div className="flex items-center gap-2">
+                                <TrendIcon direction={effrTrend.direction} />
+                                <span className="text-sm text-slate">
+                                    {effrTrend.change > 0 ? "+" : ""}{effrTrend.change.toFixed(1)}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div
+                                className="h-2 relative overflow-hidden flex-1"
+                                style={{ backgroundColor: "rgba(139, 69, 19, 0.2)" }}
+                            >
+                                <div
+                                    className="h-full transition-all duration-500"
+                                    style={{
+                                        backgroundColor: "#8B4513",
+                                        width: `${(effrCurrent / Math.max(sofrCurrent, obfrCurrent, effrCurrent)) * 100}%`
+                                    }}
+                                />
+                            </div>
+                            <span className="text-lg font-medium text-charcoal min-w-[4rem] text-right">
+                                {effrCurrent.toFixed(3)}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Key Insight */}
+                <div className="pt-4 border-t border-border">
+                    <p className="text-xs text-slate mb-2">Key Insight</p>
+                    <p className="text-sm text-charcoal leading-relaxed">
+                        {leadingRate.name} is currently the highest at {leadingRate.value.toFixed(3)}%.
+                        {Math.abs(sofrTrend.change) > 5 || Math.abs(obfrTrend.change) > 5 || Math.abs(effrTrend.change) > 5
+                            ? " Significant rate movement detected over this period."
+                            : " Rates are relatively stable over the selected period."}
+                    </p>
+                </div>
             </motion.div>
         );
     };
@@ -345,7 +474,7 @@ export default function RatesCharts() {
                     {renderChart("sofr", 0)}
                     {renderChart("obfr", 1)}
                     {renderChart("effr", 2)}
-                    {renderChart("libor", 3)}
+                    {renderSummaryCard()}
                 </div>
 
                 {/* Data Source Attribution */}
