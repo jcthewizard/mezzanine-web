@@ -122,6 +122,21 @@ export default function ContactPage() {
                     9:00 AM – 5:00 PM PST
                   </p>
                 </div>
+
+                <div>
+                  <p className="text-xs tracking-wider text-slate-light uppercase mb-2">
+                    Maintenance
+                  </p>
+                  <p className="text-charcoal">
+                    For maintenance related concerns at any of our properties, please call or text{" "}
+                    <a
+                      href="tel:4254751366"
+                      className="hover:text-red transition-colors"
+                    >
+                      425-475-1366
+                    </a>
+                  </p>
+                </div>
               </div>
 
               {/* Minimum Investment Notice */}
