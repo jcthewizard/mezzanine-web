@@ -121,7 +121,7 @@ export default function RatesCharts() {
             fredUrl += `&observation_end=${endDate}`;
         }
 
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(fredUrl)}`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
 
         try {
             const response = await fetch(proxyUrl);

@@ -37,7 +37,7 @@ export default function NewsSection() {
         const fetchFDICNews = async () => {
             try {
                 const rssUrl = "https://public.govdelivery.com/topics/USFDIC_26/feed.rss";
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
 
                 const response = await fetch(proxyUrl, {
                     method: "GET",
@@ -94,7 +94,7 @@ export default function NewsSection() {
         const fetchFedNews = async () => {
             try {
                 const rssUrl = "https://www.federalreserve.gov/feeds/press_all.xml";
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
 
                 const response = await fetch(proxyUrl, {
                     method: "GET",
