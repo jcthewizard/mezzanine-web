@@ -18,73 +18,112 @@ interface RateData {
     value: number;
 }
 
-interface RatesData {
+interface MarketsData {
     sofr: RateData[];
-    obfr: RateData[];
-    effr: RateData[];
+    sp500: RateData[];
+    gold: RateData[];
 }
 
 type TimeRange = "30d" | "90d" | "1y" | "ytd";
 
-const RATE_INFO = {
+type MarketUnit = "rate" | "index" | "price";
+
+const MARKET_INFO = {
     sofr: {
         name: "SOFR",
         fullName: "Secured Overnight Financing Rate",
         color: "#C41E3A",
+        unit: "rate" as MarketUnit,
     },
-    obfr: {
-        name: "OBFR",
-        fullName: "Overnight Bank Funding Rate",
+    sp500: {
+        name: "S&P 500",
+        fullName: "S&P 500 Index",
         color: "#2C3E50",
+        unit: "index" as MarketUnit,
     },
-    effr: {
-        name: "EFFR",
-        fullName: "Effective Federal Funds Rate",
+    gold: {
+        name: "Gold",
+        fullName: "NASDAQ Gold Index",
         color: "#8B4513",
+        unit: "price" as MarketUnit,
     },
 };
 
+const formatValue = (value: number, unit: MarketUnit, compact = false): string => {
+    switch (unit) {
+        case "rate":
+            return compact ? `${value.toFixed(2)}%` : `${value.toFixed(3)}%`;
+        case "index":
+            return compact
+                ? value.toLocaleString("en-US", { maximumFractionDigits: 0 })
+                : value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        case "price":
+            return compact
+                ? `$${value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+                : `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        default:
+            return value.toString();
+    }
+};
+
 export default function RatesCharts() {
-    const [ratesData, setRatesData] = useState<RatesData | null>(null);
+    const [fullData, setFullData] = useState<MarketsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [selectedRange, setSelectedRange] = useState<TimeRange>("90d");
 
+    // Fetch 1 year of data once on mount — all time ranges are derived client-side
     useEffect(() => {
-        fetchRates(selectedRange);
-    }, [selectedRange]);
+        const fetchAllData = async () => {
+            setLoading(true);
+            setError(false);
 
-    const fetchRates = async (range: TimeRange) => {
-        setLoading(true);
-        setError(false);
+            const apiKey = process.env.NEXT_PUBLIC_FRED_API_KEY;
+            if (!apiKey) {
+                console.error("FRED API key not found");
+                setError(true);
+                setLoading(false);
+                return;
+            }
 
-        const startDate = getStartDate(range);
-        const apiKey = process.env.NEXT_PUBLIC_FRED_API_KEY;
+            const today = new Date();
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(today.getFullYear() - 1);
+            const startDate = oneYearAgo.toISOString().split("T")[0];
 
-        if (!apiKey) {
-            console.error("FRED API key not found");
-            setError(true);
-            setLoading(false);
-            return;
-        }
+            try {
+                const [sofr, sp500, gold] = await Promise.all([
+                    fetchSeriesData("SOFR", startDate, apiKey),
+                    fetchSeriesData("SP500", startDate, apiKey),
+                    fetchSeriesData("NASDAQQGLDI", startDate, apiKey),
+                ]);
 
-        try {
-            const [sofr, obfr, effr] = await Promise.all([
-                fetchSeriesData("SOFR", startDate, apiKey),
-                fetchSeriesData("OBFR", startDate, apiKey),
-                fetchSeriesData("DFF", startDate, apiKey),
-            ]);
+                setFullData({ sofr, sp500, gold });
+            } catch (err) {
+                console.error("Error fetching market data:", err);
+                setError(true);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-            setRatesData({ sofr, obfr, effr });
-        } catch (err) {
-            console.error("Error fetching rates:", err);
-            setError(true);
-        } finally {
-            setLoading(false);
-        }
-    };
+        fetchAllData();
+    }, []);
 
-    const getStartDate = (range: TimeRange): string => {
+    // Filter full dataset to the selected time range (instant, no network call)
+    const marketsData: MarketsData | null = (() => {
+        if (!fullData) return null;
+
+        const cutoffDate = getStartDate(selectedRange);
+
+        return {
+            sofr: fullData.sofr.filter((d) => d.date >= cutoffDate),
+            sp500: fullData.sp500.filter((d) => d.date >= cutoffDate),
+            gold: fullData.gold.filter((d) => d.date >= cutoffDate),
+        };
+    })();
+
+    function getStartDate(range: TimeRange): string {
         const today = new Date();
         let startDate = new Date();
 
@@ -106,7 +145,7 @@ export default function RatesCharts() {
         }
 
         return startDate.toISOString().split("T")[0];
-    };
+    }
 
     const fetchSeriesData = async (
         seriesId: string,
@@ -116,32 +155,51 @@ export default function RatesCharts() {
     ): Promise<RateData[]> => {
         let fredUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&observation_start=${startDate}`;
 
-        // Add end date if provided (for LIBOR historical data)
         if (endDate) {
             fredUrl += `&observation_end=${endDate}`;
         }
 
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`;
+        // Try multiple CORS proxy strategies
+        const proxyStrategies = [
+            // Strategy 1: corsproxy.io (works from browser, blocked from curl/server)
+            `https://corsproxy.io/?${encodeURIComponent(fredUrl)}`,
+            // Strategy 2: allorigins (sometimes unreliable)
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`,
+            // Strategy 3: direct fetch (may work depending on browser/CORS policy)
+            fredUrl,
+        ];
 
-        try {
-            const response = await fetch(proxyUrl);
-            if (!response.ok) {
-                console.error(`Failed to fetch ${seriesId}:`, response.statusText);
-                return [];
+        for (const proxyUrl of proxyStrategies) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                const response = await fetch(proxyUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    console.warn(`Proxy failed for ${seriesId} with ${proxyUrl.split('?')[0]}:`, response.status);
+                    continue;
+                }
+
+                const data = await response.json();
+
+                if (data.observations) {
+                    return data.observations
+                        .filter((obs: { value: string }) => obs.value !== ".")
+                        .map((obs: { date: string; value: string }) => ({
+                            date: obs.date,
+                            value: parseFloat(obs.value),
+                        }));
+                }
+            } catch (error) {
+                console.warn(`Proxy attempt failed for ${seriesId}:`, error);
+                continue;
             }
-
-            const data = await response.json();
-
-            return data.observations
-                .filter((obs: { value: string }) => obs.value !== ".")
-                .map((obs: { date: string; value: string }) => ({
-                    date: obs.date,
-                    value: parseFloat(obs.value),
-                }));
-        } catch (error) {
-            console.error(`Error fetching ${seriesId}:`, error);
-            return [];
         }
+
+        console.error(`All proxy strategies failed for ${seriesId}`);
+        return [];
     };
 
     const formatDate = (dateString: string) => {
@@ -162,15 +220,15 @@ export default function RatesCharts() {
     };
 
     const renderChart = (
-        rateKey: keyof RatesData,
+        marketKey: keyof MarketsData,
         index: number
     ) => {
-        const rateInfo = RATE_INFO[rateKey];
-        const data = ratesData?.[rateKey] || [];
+        const info = MARKET_INFO[marketKey];
+        const data = marketsData?.[marketKey] || [];
 
         return (
             <motion.div
-                key={rateKey}
+                key={marketKey}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -181,10 +239,10 @@ export default function RatesCharts() {
                 <div className="mb-6">
                     <div className="flex items-start justify-between gap-3 mb-2">
                         <h3 className="text-lg font-medium text-charcoal">
-                            {rateInfo.name}
+                            {info.name}
                         </h3>
                     </div>
-                    <p className="text-slate text-sm">{rateInfo.fullName}</p>
+                    <p className="text-slate text-sm">{info.fullName}</p>
                 </div>
 
                 {/* Chart */}
@@ -221,7 +279,8 @@ export default function RatesCharts() {
                                     fontFamily: "inherit",
                                 }}
                                 tickLine={false}
-                                tickFormatter={(value) => `${value.toFixed(2)}%`}
+                                tickFormatter={(value) => formatValue(value, info.unit, true)}
+                                domain={["auto", "auto"]}
                             />
                             <Tooltip
                                 contentStyle={{
@@ -232,14 +291,14 @@ export default function RatesCharts() {
                                 }}
                                 labelFormatter={formatTooltipDate}
                                 formatter={(value: number | undefined) => [
-                                    value !== undefined ? `${value.toFixed(3)}%` : "N/A",
-                                    rateInfo.name,
+                                    value !== undefined ? formatValue(value, info.unit) : "N/A",
+                                    info.name,
                                 ]}
                             />
                             <Line
                                 type="monotone"
                                 dataKey="value"
-                                stroke={rateInfo.color}
+                                stroke={info.color}
                                 strokeWidth={2}
                                 dot={false}
                                 activeDot={{ r: 4 }}
@@ -251,9 +310,9 @@ export default function RatesCharts() {
                 {/* Current Value */}
                 {!loading && !error && data.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-border">
-                        <p className="text-slate text-xs mb-1">Latest Rate</p>
+                        <p className="text-slate text-xs mb-1">Latest Value</p>
                         <p className="text-2xl font-medium text-charcoal">
-                            {data[data.length - 1].value.toFixed(3)}%
+                            {formatValue(data[data.length - 1].value, info.unit)}
                         </p>
                         <p className="text-slate text-xs mt-1">
                             as of {formatTooltipDate(data[data.length - 1].date)}
@@ -265,7 +324,7 @@ export default function RatesCharts() {
     };
 
     const renderSummaryCard = () => {
-        if (!ratesData || loading) {
+        if (!marketsData || loading) {
             return (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -281,7 +340,6 @@ export default function RatesCharts() {
             );
         }
 
-        // Calculate trends and spreads
         const calculateTrend = (data: RateData[]) => {
             if (data.length < 2) return { change: 0, direction: "neutral" as "up" | "down" | "neutral" };
             const first = data[0].value;
@@ -291,33 +349,53 @@ export default function RatesCharts() {
             return { change, direction };
         };
 
-        const sofrTrend = calculateTrend(ratesData.sofr);
-        const obfrTrend = calculateTrend(ratesData.obfr);
-        const effrTrend = calculateTrend(ratesData.effr);
+        const sofrTrend = calculateTrend(marketsData.sofr);
+        const sp500Trend = calculateTrend(marketsData.sp500);
+        const goldTrend = calculateTrend(marketsData.gold);
 
-        const sofrCurrent = ratesData.sofr[ratesData.sofr.length - 1]?.value || 0;
-        const obfrCurrent = ratesData.obfr[ratesData.obfr.length - 1]?.value || 0;
-        const effrCurrent = ratesData.effr[ratesData.effr.length - 1]?.value || 0;
-
-        const sofrEffrSpread = sofrCurrent - effrCurrent;
-        const obfrEffrSpread = obfrCurrent - effrCurrent;
-
-        // Determine key insight
-        const rates = [
-            { name: "SOFR", value: sofrCurrent },
-            { name: "OBFR", value: obfrCurrent },
-            { name: "EFFR", value: effrCurrent },
-        ];
-        const leadingRate = rates.reduce((max, rate) =>
-            rate.value > max.value ? rate : max
-        );
-        const maxSpread = Math.max(Math.abs(sofrEffrSpread), Math.abs(obfrEffrSpread));
+        const sofrCurrent = marketsData.sofr[marketsData.sofr.length - 1]?.value || 0;
+        const sp500Current = marketsData.sp500[marketsData.sp500.length - 1]?.value || 0;
+        const goldCurrent = marketsData.gold[marketsData.gold.length - 1]?.value || 0;
 
         const TrendIcon = ({ direction }: { direction: "up" | "down" | "neutral" }) => {
-            if (direction === "up") return <TrendingUp size={14} className="text-red" />;
-            if (direction === "down") return <TrendingDown size={14} className="text-green-600" />;
+            if (direction === "up") return <TrendingUp size={14} className="text-green-600" />;
+            if (direction === "down") return <TrendingDown size={14} className="text-red" />;
             return <Minus size={14} className="text-slate" />;
         };
+
+        const summaryItems = [
+            {
+                name: "SOFR",
+                current: formatValue(sofrCurrent, "rate"),
+                trend: sofrTrend,
+                color: MARKET_INFO.sofr.color,
+                colorClass: "bg-red",
+                bgClass: "bg-red/20",
+            },
+            {
+                name: "S&P 500",
+                current: formatValue(sp500Current, "index"),
+                trend: sp500Trend,
+                color: MARKET_INFO.sp500.color,
+                colorClass: "bg-charcoal",
+                bgClass: "bg-charcoal/20",
+            },
+            {
+                name: "Gold",
+                current: formatValue(goldCurrent, "price"),
+                trend: goldTrend,
+                color: MARKET_INFO.gold.color,
+                colorClass: "",
+                bgClass: "",
+            },
+        ];
+
+        // Determine key insight
+        const biggestMover = [
+            { name: "SOFR", change: Math.abs(sofrTrend.change) },
+            { name: "S&P 500", change: Math.abs(sp500Trend.change) },
+            { name: "Gold", change: Math.abs(goldTrend.change) },
+        ].reduce((max, item) => (item.change > max.change ? item : max));
 
         return (
             <motion.div
@@ -330,106 +408,56 @@ export default function RatesCharts() {
                 {/* Header */}
                 <div className="mb-6">
                     <h3 className="text-lg font-medium text-charcoal mb-2">
-                        Rate Comparison Summary
+                        Market Snapshot
                     </h3>
                     <p className="text-slate text-sm">
-                        Current rates and trends over selected period
+                        Current levels and trends over selected period
                     </p>
                 </div>
 
-                {/* Current Rates with Trends */}
+                {/* Market Items */}
                 <div className="space-y-4 mb-6">
-                    {/* SOFR */}
-                    <div>
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-charcoal">SOFR</span>
-                            <div className="flex items-center gap-2">
-                                <TrendIcon direction={sofrTrend.direction} />
-                                <span className="text-sm text-slate">
-                                    {sofrTrend.change > 0 ? "+" : ""}{sofrTrend.change.toFixed(1)}%
+                    {summaryItems.map((item) => (
+                        <div key={item.name}>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-charcoal">{item.name}</span>
+                                <div className="flex items-center gap-2">
+                                    <TrendIcon direction={item.trend.direction} />
+                                    <span className="text-sm text-slate">
+                                        {item.trend.change > 0 ? "+" : ""}{item.trend.change.toFixed(1)}%
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div
+                                    className="h-2 relative overflow-hidden flex-1"
+                                    style={{ backgroundColor: `${item.color}33` }}
+                                >
+                                    <div
+                                        className="h-full transition-all duration-500"
+                                        style={{
+                                            backgroundColor: item.color,
+                                            width: `${Math.min(100, Math.max(20, 50 + item.trend.change * 2))}%`,
+                                        }}
+                                    />
+                                </div>
+                                <span className="text-lg font-medium text-charcoal min-w-[5.5rem] text-right">
+                                    {item.current}
                                 </span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div
-                                className="h-2 bg-red/20 relative overflow-hidden flex-1"
-                            >
-                                <div
-                                    className="h-full bg-red transition-all duration-500"
-                                    style={{ width: `${(sofrCurrent / Math.max(sofrCurrent, obfrCurrent, effrCurrent)) * 100}%` }}
-                                />
-                            </div>
-                            <span className="text-lg font-medium text-charcoal min-w-[4rem] text-right">
-                                {sofrCurrent.toFixed(3)}%
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* OBFR */}
-                    <div>
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-charcoal">OBFR</span>
-                            <div className="flex items-center gap-2">
-                                <TrendIcon direction={obfrTrend.direction} />
-                                <span className="text-sm text-slate">
-                                    {obfrTrend.change > 0 ? "+" : ""}{obfrTrend.change.toFixed(1)}%
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div
-                                className="h-2 bg-charcoal/20 relative overflow-hidden flex-1"
-                            >
-                                <div
-                                    className="h-full bg-charcoal transition-all duration-500"
-                                    style={{ width: `${(obfrCurrent / Math.max(sofrCurrent, obfrCurrent, effrCurrent)) * 100}%` }}
-                                />
-                            </div>
-                            <span className="text-lg font-medium text-charcoal min-w-[4rem] text-right">
-                                {obfrCurrent.toFixed(3)}%
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* EFFR */}
-                    <div>
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-charcoal">EFFR</span>
-                            <div className="flex items-center gap-2">
-                                <TrendIcon direction={effrTrend.direction} />
-                                <span className="text-sm text-slate">
-                                    {effrTrend.change > 0 ? "+" : ""}{effrTrend.change.toFixed(1)}%
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div
-                                className="h-2 relative overflow-hidden flex-1"
-                                style={{ backgroundColor: "rgba(139, 69, 19, 0.2)" }}
-                            >
-                                <div
-                                    className="h-full transition-all duration-500"
-                                    style={{
-                                        backgroundColor: "#8B4513",
-                                        width: `${(effrCurrent / Math.max(sofrCurrent, obfrCurrent, effrCurrent)) * 100}%`
-                                    }}
-                                />
-                            </div>
-                            <span className="text-lg font-medium text-charcoal min-w-[4rem] text-right">
-                                {effrCurrent.toFixed(3)}%
-                            </span>
-                        </div>
-                    </div>
+                    ))}
                 </div>
 
                 {/* Key Insight */}
                 <div className="pt-4 border-t border-border">
                     <p className="text-xs text-slate mb-2">Key Insight</p>
                     <p className="text-sm text-charcoal leading-relaxed">
-                        {leadingRate.name} is currently the highest at {leadingRate.value.toFixed(3)}%.
-                        {Math.abs(sofrTrend.change) > 5 || Math.abs(obfrTrend.change) > 5 || Math.abs(effrTrend.change) > 5
-                            ? " Significant rate movement detected over this period."
-                            : " Rates are relatively stable over the selected period."}
+                        {biggestMover.name} is the biggest mover over this period
+                        ({biggestMover.change > 0 ? "+" : ""}{biggestMover.change.toFixed(1)}%).
+                        {biggestMover.change > 5
+                            ? " Significant market movement detected."
+                            : " Markets are relatively stable over the selected period."}
                     </p>
                 </div>
             </motion.div>
@@ -446,7 +474,7 @@ export default function RatesCharts() {
                     </p>
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                         <h2 className="font-serif text-3xl md:text-4xl text-charcoal leading-tight">
-                            Interest Rate Benchmarks
+                            Market Indicators
                         </h2>
 
                         {/* Time Range Selector */}
@@ -472,8 +500,8 @@ export default function RatesCharts() {
                 {/* Charts Grid */}
                 <div className="grid md:grid-cols-2 gap-6">
                     {renderChart("sofr", 0)}
-                    {renderChart("obfr", 1)}
-                    {renderChart("effr", 2)}
+                    {renderChart("sp500", 1)}
+                    {renderChart("gold", 2)}
                     {renderSummaryCard()}
                 </div>
 
