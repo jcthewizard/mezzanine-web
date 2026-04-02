@@ -35,22 +35,32 @@ export default function NewsSection() {
     useEffect(() => {
         // Fetch FDIC RSS feed
         const fetchFDICNews = async () => {
-            try {
-                const rssUrl = "https://public.govdelivery.com/topics/USFDIC_26/feed.rss";
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
+            const rssUrl = "https://public.govdelivery.com/topics/USFDIC_26/feed.rss";
+            const proxyUrls = [
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`,
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`,
+            ];
 
-                const response = await fetch(proxyUrl, {
-                    method: "GET",
-                    headers: { Accept: "application/xml" },
-                });
+            for (const proxyUrl of proxyUrls) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-                if (response.ok) {
+                    const response = await fetch(proxyUrl, {
+                        method: "GET",
+                        headers: { Accept: "application/xml" },
+                        signal: controller.signal,
+                    });
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) continue;
+
                     const xmlText = await response.text();
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(xmlText, "text/xml");
 
                     const parseError = xmlDoc.querySelector("parsererror");
-                    if (parseError) throw new Error("RSS parsing error");
+                    if (parseError) continue;
 
                     const items = xmlDoc.querySelectorAll("item");
                     const newsItems: NewsItem[] = [];
@@ -70,44 +80,55 @@ export default function NewsSection() {
 
                     setFdicFeed({ source: "FDIC", items: newsItems, loading: false, error: false });
                     return;
+                } catch (error) {
+                    console.warn("FDIC proxy attempt failed:", error);
+                    continue;
                 }
-
-                throw new Error("Failed to fetch FDIC RSS");
-            } catch (error) {
-                console.error("Error fetching FDIC news:", error);
-                setFdicFeed({
-                    source: "FDIC",
-                    items: [
-                        {
-                            title: "FDIC Press Releases",
-                            link: "https://www.fdic.gov/news/press-releases",
-                            pubDate: new Date().toISOString(),
-                        },
-                    ],
-                    loading: false,
-                    error: true,
-                });
             }
+
+            console.error("All FDIC proxy strategies failed");
+            setFdicFeed({
+                source: "FDIC",
+                items: [
+                    {
+                        title: "FDIC Press Releases",
+                        link: "https://www.fdic.gov/news/press-releases",
+                        pubDate: new Date().toISOString(),
+                    },
+                ],
+                loading: false,
+                error: true,
+            });
         };
 
         // Fetch Federal Reserve RSS feed
         const fetchFedNews = async () => {
-            try {
-                const rssUrl = "https://www.federalreserve.gov/feeds/press_all.xml";
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
+            const rssUrl = "https://www.federalreserve.gov/feeds/press_all.xml";
+            const proxyUrls = [
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`,
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`,
+            ];
 
-                const response = await fetch(proxyUrl, {
-                    method: "GET",
-                    headers: { Accept: "application/xml" },
-                });
+            for (const proxyUrl of proxyUrls) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-                if (response.ok) {
+                    const response = await fetch(proxyUrl, {
+                        method: "GET",
+                        headers: { Accept: "application/xml" },
+                        signal: controller.signal,
+                    });
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) continue;
+
                     const xmlText = await response.text();
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(xmlText, "text/xml");
 
                     const parseError = xmlDoc.querySelector("parsererror");
-                    if (parseError) throw new Error("RSS parsing error");
+                    if (parseError) continue;
 
                     const items = xmlDoc.querySelectorAll("item");
                     const newsItems: NewsItem[] = [];
@@ -127,24 +148,25 @@ export default function NewsSection() {
 
                     setFedFeed({ source: "Federal Reserve", items: newsItems, loading: false, error: false });
                     return;
+                } catch (error) {
+                    console.warn("Fed proxy attempt failed:", error);
+                    continue;
                 }
-
-                throw new Error("Failed to fetch Federal Reserve RSS");
-            } catch (error) {
-                console.error("Error fetching Federal Reserve news:", error);
-                setFedFeed({
-                    source: "Federal Reserve",
-                    items: [
-                        {
-                            title: "Federal Reserve Press Releases",
-                            link: "https://www.federalreserve.gov/newsevents/pressreleases.htm",
-                            pubDate: new Date().toISOString(),
-                        },
-                    ],
-                    loading: false,
-                    error: true,
-                });
             }
+
+            console.error("All Federal Reserve proxy strategies failed");
+            setFedFeed({
+                source: "Federal Reserve",
+                items: [
+                    {
+                        title: "Federal Reserve Press Releases",
+                        link: "https://www.federalreserve.gov/newsevents/pressreleases.htm",
+                        pubDate: new Date().toISOString(),
+                    },
+                ],
+                loading: false,
+                error: true,
+            });
         };
 
         fetchFDICNews();

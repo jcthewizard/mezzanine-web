@@ -161,12 +161,10 @@ export default function RatesCharts() {
 
         // Try multiple CORS proxy strategies
         const proxyStrategies = [
-            // Strategy 1: corsproxy.io (works from browser, blocked from curl/server)
-            `https://corsproxy.io/?${encodeURIComponent(fredUrl)}`,
-            // Strategy 2: allorigins (sometimes unreliable)
+            // Strategy 1: codetabs (reliable from browser)
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(fredUrl)}`,
+            // Strategy 2: allorigins (fallback)
             `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`,
-            // Strategy 3: direct fetch (may work depending on browser/CORS policy)
-            fredUrl,
         ];
 
         for (const proxyUrl of proxyStrategies) {
