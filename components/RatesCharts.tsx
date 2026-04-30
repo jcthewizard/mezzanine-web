@@ -74,7 +74,9 @@ export default function RatesCharts() {
 
     // Fetch 1 year of data once on mount — all time ranges are derived client-side
     useEffect(() => {
-        const fetchAllData = async () => {
+        const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+        const fetchAllData = async (attempt = 1): Promise<void> => {
             setLoading(true);
             setError(false);
 
@@ -98,9 +100,21 @@ export default function RatesCharts() {
                     fetchSeriesData("NASDAQQGLDI", startDate, apiKey),
                 ]);
 
+                // If any series returned empty, retry
+                const hasData = sofr.length > 0 && sp500.length > 0 && gold.length > 0;
+                if (!hasData && attempt < 3) {
+                    console.warn(`Some data missing on attempt ${attempt}, retrying in 2s...`);
+                    await delay(2000);
+                    return fetchAllData(attempt + 1);
+                }
+
                 setFullData({ sofr, sp500, gold });
             } catch (err) {
-                console.error("Error fetching market data:", err);
+                console.error(`Error fetching market data (attempt ${attempt}):`, err);
+                if (attempt < 3) {
+                    await delay(2000);
+                    return fetchAllData(attempt + 1);
+                }
                 setError(true);
             } finally {
                 setLoading(false);
@@ -159,12 +173,13 @@ export default function RatesCharts() {
             fredUrl += `&observation_end=${endDate}`;
         }
 
-        // Try multiple CORS proxy strategies
+        // Cache-buster to prevent CORS proxies from serving stale data
+        const cacheBuster = Date.now();
+
+        // Try multiple CORS proxy strategies with cache-busting
         const proxyStrategies = [
-            // Strategy 1: codetabs (reliable from browser)
-            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(fredUrl)}`,
-            // Strategy 2: allorigins (fallback)
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`,
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}&_t=${cacheBuster}`,
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(fredUrl)}&_t=${cacheBuster}`,
         ];
 
         for (const proxyUrl of proxyStrategies) {
