@@ -32,145 +32,53 @@ export default function NewsSection() {
         error: false,
     });
 
+    // News is fetched at build time (scripts/fetch-data.mjs) and served as a
+    // same-origin static file.
     useEffect(() => {
-        // Fetch FDIC RSS feed
-        const fetchFDICNews = async () => {
-            const rssUrl = "https://public.govdelivery.com/topics/USFDIC_26/feed.rss";
-            const proxyUrls = [
-                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`,
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`,
-            ];
+        const fdicFallback: NewsItem[] = [
+            {
+                title: "FDIC Press Releases",
+                link: "https://www.fdic.gov/news/press-releases",
+                pubDate: "",
+            },
+        ];
+        const fedFallback: NewsItem[] = [
+            {
+                title: "Federal Reserve Press Releases",
+                link: "https://www.federalreserve.gov/newsevents/pressreleases.htm",
+                pubDate: "",
+            },
+        ];
 
-            for (const proxyUrl of proxyUrls) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const fetchNews = async () => {
+            try {
+                const response = await fetch("/data/news.json", { cache: "no-cache" });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-                    const response = await fetch(proxyUrl, {
-                        method: "GET",
-                        headers: { Accept: "application/xml" },
-                        signal: controller.signal,
-                    });
-                    clearTimeout(timeoutId);
+                const data = await response.json();
+                const fdicItems: NewsItem[] = Array.isArray(data.fdic) ? data.fdic : [];
+                const fedItems: NewsItem[] = Array.isArray(data.fed) ? data.fed : [];
 
-                    if (!response.ok) continue;
-
-                    const xmlText = await response.text();
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-
-                    const parseError = xmlDoc.querySelector("parsererror");
-                    if (parseError) continue;
-
-                    const items = xmlDoc.querySelectorAll("item");
-                    const newsItems: NewsItem[] = [];
-                    const maxItems = Math.min(5, items.length);
-
-                    for (let i = 0; i < maxItems; i++) {
-                        const item = items[i];
-                        const title = item.querySelector("title")?.textContent?.trim() || "";
-                        const link = item.querySelector("link")?.textContent?.trim() || "";
-                        const pubDate = item.querySelector("pubDate")?.textContent?.trim() || "";
-                        const description = item.querySelector("description")?.textContent?.trim() || "";
-
-                        if (title && link) {
-                            newsItems.push({ title, link, pubDate, description });
-                        }
-                    }
-
-                    setFdicFeed({ source: "FDIC", items: newsItems, loading: false, error: false });
-                    return;
-                } catch (error) {
-                    console.warn("FDIC proxy attempt failed:", error);
-                    continue;
-                }
+                setFdicFeed({
+                    source: "FDIC",
+                    items: fdicItems.length > 0 ? fdicItems : fdicFallback,
+                    loading: false,
+                    error: fdicItems.length === 0,
+                });
+                setFedFeed({
+                    source: "Federal Reserve",
+                    items: fedItems.length > 0 ? fedItems : fedFallback,
+                    loading: false,
+                    error: fedItems.length === 0,
+                });
+            } catch (error) {
+                console.error("Failed to load news data:", error);
+                setFdicFeed({ source: "FDIC", items: fdicFallback, loading: false, error: true });
+                setFedFeed({ source: "Federal Reserve", items: fedFallback, loading: false, error: true });
             }
-
-            console.error("All FDIC proxy strategies failed");
-            setFdicFeed({
-                source: "FDIC",
-                items: [
-                    {
-                        title: "FDIC Press Releases",
-                        link: "https://www.fdic.gov/news/press-releases",
-                        pubDate: new Date().toISOString(),
-                    },
-                ],
-                loading: false,
-                error: true,
-            });
         };
 
-        // Fetch Federal Reserve RSS feed
-        const fetchFedNews = async () => {
-            const rssUrl = "https://www.federalreserve.gov/feeds/press_all.xml";
-            const proxyUrls = [
-                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`,
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`,
-            ];
-
-            for (const proxyUrl of proxyUrls) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-                    const response = await fetch(proxyUrl, {
-                        method: "GET",
-                        headers: { Accept: "application/xml" },
-                        signal: controller.signal,
-                    });
-                    clearTimeout(timeoutId);
-
-                    if (!response.ok) continue;
-
-                    const xmlText = await response.text();
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-
-                    const parseError = xmlDoc.querySelector("parsererror");
-                    if (parseError) continue;
-
-                    const items = xmlDoc.querySelectorAll("item");
-                    const newsItems: NewsItem[] = [];
-                    const maxItems = Math.min(5, items.length);
-
-                    for (let i = 0; i < maxItems; i++) {
-                        const item = items[i];
-                        const title = item.querySelector("title")?.textContent?.trim() || "";
-                        const link = item.querySelector("link")?.textContent?.trim() || "";
-                        const pubDate = item.querySelector("pubDate")?.textContent?.trim() || "";
-                        const description = item.querySelector("description")?.textContent?.trim() || "";
-
-                        if (title && link) {
-                            newsItems.push({ title, link, pubDate, description });
-                        }
-                    }
-
-                    setFedFeed({ source: "Federal Reserve", items: newsItems, loading: false, error: false });
-                    return;
-                } catch (error) {
-                    console.warn("Fed proxy attempt failed:", error);
-                    continue;
-                }
-            }
-
-            console.error("All Federal Reserve proxy strategies failed");
-            setFedFeed({
-                source: "Federal Reserve",
-                items: [
-                    {
-                        title: "Federal Reserve Press Releases",
-                        link: "https://www.federalreserve.gov/newsevents/pressreleases.htm",
-                        pubDate: new Date().toISOString(),
-                    },
-                ],
-                loading: false,
-                error: true,
-            });
-        };
-
-        fetchFDICNews();
-        fetchFedNews();
+        fetchNews();
     }, []);
 
     const formatDate = (dateString: string) => {

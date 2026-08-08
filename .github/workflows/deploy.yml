@@ -3,6 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: ["main"]
+  schedule:
+    # Refresh market data and news feeds every 6 hours
+    - cron: "0 */6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -30,10 +33,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Fetch market data and news feeds
+        run: node scripts/fetch-data.mjs
+        env:
+          FRED_API_KEY: ${{ secrets.NEXT_PUBLIC_FRED_API_KEY }}
+
       - name: Build
         run: npm run build
-        env:
-          NEXT_PUBLIC_FRED_API_KEY: ${{ secrets.NEXT_PUBLIC_FRED_API_KEY }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

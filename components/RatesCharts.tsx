@@ -72,7 +72,8 @@ export default function RatesCharts() {
     const [error, setError] = useState(false);
     const [selectedRange, setSelectedRange] = useState<TimeRange>("90d");
 
-    // Fetch 1 year of data once on mount — all time ranges are derived client-side
+    // Market data is fetched at build time (scripts/fetch-data.mjs) and served
+    // as a same-origin static file — all time ranges are derived client-side.
     useEffect(() => {
         const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -80,39 +81,21 @@ export default function RatesCharts() {
             setLoading(true);
             setError(false);
 
-            const apiKey = process.env.NEXT_PUBLIC_FRED_API_KEY;
-            if (!apiKey) {
-                console.error("FRED API key not found");
-                setError(true);
-                setLoading(false);
-                return;
-            }
-
-            const today = new Date();
-            const oneYearAgo = new Date();
-            oneYearAgo.setFullYear(today.getFullYear() - 1);
-            const startDate = oneYearAgo.toISOString().split("T")[0];
-
             try {
-                const [sofr, sp500, gold] = await Promise.all([
-                    fetchSeriesData("SOFR", startDate, apiKey),
-                    fetchSeriesData("SP500", startDate, apiKey),
-                    fetchSeriesData("NASDAQQGLDI", startDate, apiKey),
-                ]);
+                const response = await fetch("/data/markets.json", { cache: "no-cache" });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-                // If any series returned empty, retry
-                const hasData = sofr.length > 0 && sp500.length > 0 && gold.length > 0;
-                if (!hasData && attempt < 3) {
-                    console.warn(`Some data missing on attempt ${attempt}, retrying in 2s...`);
-                    await delay(2000);
-                    return fetchAllData(attempt + 1);
+                const data = await response.json();
+                const { sofr, sp500, gold } = data.series ?? {};
+                if (!sofr?.length || !sp500?.length || !gold?.length) {
+                    throw new Error("Market data file is missing series");
                 }
 
                 setFullData({ sofr, sp500, gold });
             } catch (err) {
-                console.error(`Error fetching market data (attempt ${attempt}):`, err);
+                console.error(`Error loading market data (attempt ${attempt}):`, err);
                 if (attempt < 3) {
-                    await delay(2000);
+                    await delay(1000);
                     return fetchAllData(attempt + 1);
                 }
                 setError(true);
@@ -160,60 +143,6 @@ export default function RatesCharts() {
 
         return startDate.toISOString().split("T")[0];
     }
-
-    const fetchSeriesData = async (
-        seriesId: string,
-        startDate: string,
-        apiKey: string,
-        endDate?: string
-    ): Promise<RateData[]> => {
-        let fredUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&observation_start=${startDate}`;
-
-        if (endDate) {
-            fredUrl += `&observation_end=${endDate}`;
-        }
-
-        // Cache-buster to prevent CORS proxies from serving stale data
-        const cacheBuster = Date.now();
-
-        // Try multiple CORS proxy strategies with cache-busting
-        const proxyStrategies = [
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}&_t=${cacheBuster}`,
-            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(fredUrl)}&_t=${cacheBuster}`,
-        ];
-
-        for (const proxyUrl of proxyStrategies) {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-                const response = await fetch(proxyUrl, { signal: controller.signal });
-                clearTimeout(timeoutId);
-
-                if (!response.ok) {
-                    console.warn(`Proxy failed for ${seriesId} with ${proxyUrl.split('?')[0]}:`, response.status);
-                    continue;
-                }
-
-                const data = await response.json();
-
-                if (data.observations) {
-                    return data.observations
-                        .filter((obs: { value: string }) => obs.value !== ".")
-                        .map((obs: { date: string; value: string }) => ({
-                            date: obs.date,
-                            value: parseFloat(obs.value),
-                        }));
-                }
-            } catch (error) {
-                console.warn(`Proxy attempt failed for ${seriesId}:`, error);
-                continue;
-            }
-        }
-
-        console.error(`All proxy strategies failed for ${seriesId}`);
-        return [];
-    };
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
