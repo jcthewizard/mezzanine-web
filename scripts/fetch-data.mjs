@@ -1,113 +1,63 @@
-/**
- * Build-time data ingestion.
- *
- * Fetches FRED market series and FDIC / Federal Reserve RSS feeds, writing
- * them to public/data/*.json so the exported static site can serve them
- * same-origin (no CORS proxies, no API key in the client bundle).
- *
- * Run via `node scripts/fetch-data.mjs` before `next build`. Requires
- * FRED_API_KEY in the environment (or .env.local for local runs).
- *
- * Failure policy: each output file is only overwritten on a fully successful
- * fetch. On failure the previously committed data is left in place and the
- * script exits 0 so the build still deploys with slightly stale data.
- */
-
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+/** Build a recoverable snapshot. Live charts refresh independently of deployments. */
+import { readFileSync, writeFileSync, mkdirSync, renameSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { fetchMarketSnapshot, normalizeMarketSnapshot } from "../lib/market-data.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = join(root, "public", "data");
 mkdirSync(dataDir, { recursive: true });
 
-// Load .env.local for local runs; CI provides env vars directly.
-if (!process.env.FRED_API_KEY) {
-    const envPath = join(root, ".env.local");
-    if (existsSync(envPath)) {
-        for (const line of readFileSync(envPath, "utf8").split("\n")) {
-            const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
-            if (match && !process.env[match[1]]) process.env[match[1]] = match[2].trim();
-        }
-    }
-}
-
-const FRED_API_KEY = process.env.FRED_API_KEY || process.env.NEXT_PUBLIC_FRED_API_KEY;
-
-const FETCH_TIMEOUT_MS = 20000;
-
 async function fetchWithTimeout(url, options = {}) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    try {
-        return await fetch(url, {
-            ...options,
-            signal: controller.signal,
-            headers: {
-                "User-Agent": "Mozilla/5.0 (compatible; mezzanine-data-fetcher)",
-                ...options.headers,
-            },
-        });
-    } finally {
-        clearTimeout(timeout);
-    }
+    return fetch(url, { ...options, signal: AbortSignal.timeout(15000) });
 }
 
 async function retry(label, fn, attempts = 3) {
-    let lastError;
     for (let i = 1; i <= attempts; i++) {
-        try {
-            return await fn();
-        } catch (err) {
-            lastError = err;
-            console.warn(`[${label}] attempt ${i}/${attempts} failed: ${err.message}`);
-            if (i < attempts) await new Promise((r) => setTimeout(r, 2000 * i));
+        try { return await fn(); }
+        catch {
+            // Never log a provider URL, credential, or response body.
+            if (i === attempts) throw new Error(`${label}: fetch failed after ${attempts} attempts`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * i));
         }
     }
-    throw lastError;
 }
 
-// ---------------------------------------------------------------------------
-// FRED market data
-// ---------------------------------------------------------------------------
+function writeSnapshot(filename, data) {
+    const path = join(dataDir, filename);
+    const temporary = `${path}.tmp`;
+    writeFileSync(temporary, JSON.stringify(data, null, 2) + "\n");
+    renameSync(temporary, path);
+}
 
-async function fetchFredSeries(seriesId, startDate) {
-    const url =
-        `https://api.stlouisfed.org/fred/series/observations` +
-        `?series_id=${seriesId}&api_key=${FRED_API_KEY}&file_type=json` +
-        `&observation_start=${startDate}`;
-
-    const response = await fetchWithTimeout(url);
-    if (!response.ok) throw new Error(`FRED ${seriesId} HTTP ${response.status}`);
-
-    const data = await response.json();
-    if (!Array.isArray(data.observations)) {
-        throw new Error(`FRED ${seriesId}: no observations in response`);
+async function readPublishedSnapshot(filename) {
+    try {
+        const response = await fetchWithTimeout(`https://mezzinc.com/data/${filename}`, { cache: "no-cache" });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch {
+        return null;
     }
-
-    const points = data.observations
-        .filter((obs) => obs.value !== ".")
-        .map((obs) => ({ date: obs.date, value: parseFloat(obs.value) }));
-
-    if (points.length === 0) throw new Error(`FRED ${seriesId}: empty series`);
-    return points;
 }
 
 async function buildMarkets() {
-    if (!FRED_API_KEY) throw new Error("FRED_API_KEY not set");
-
-    // 13 months back so the 1y view is always fully populated.
-    const start = new Date();
-    start.setMonth(start.getMonth() - 13);
-    const startDate = start.toISOString().split("T")[0];
-
-    const [sofr, sp500, gold] = await Promise.all([
-        retry("SOFR", () => fetchFredSeries("SOFR", startDate)),
-        retry("SP500", () => fetchFredSeries("SP500", startDate)),
-        retry("NASDAQQGLDI", () => fetchFredSeries("NASDAQQGLDI", startDate)),
-    ]);
-
-    return { updatedAt: new Date().toISOString(), series: { sofr, sp500, gold } };
+    let previous;
+    try { previous = normalizeMarketSnapshot(JSON.parse(readFileSync(join(dataDir, "markets.json"), "utf8"))); }
+    catch { /* A missing or invalid snapshot cannot be used as a fallback. */ }
+    // Each CI run starts from a clean checkout. Recover the latest deployment so
+    // an upstream outage cannot roll the website back to an older committed file.
+    const published = normalizeMarketSnapshot(await readPublishedSnapshot("markets.json"));
+    const localSeries = previous?.series.sofr;
+    const publishedSeries = published?.series.sofr;
+    if (publishedSeries && (!localSeries
+        || publishedSeries.points.at(-1).date > localSeries.points.at(-1).date
+        || (publishedSeries.points.at(-1).date === localSeries.points.at(-1).date
+            && Date.parse(publishedSeries.fetchedAt) > Date.parse(localSeries.fetchedAt)))) previous = published;
+    const { snapshot, errors } = await fetchMarketSnapshot({ previous });
+    writeSnapshot("markets.json", snapshot);
+    console.log(`Market snapshot: ${Object.keys(snapshot.series).join(", ") || "no available series"}`);
+    for (const [series, code] of Object.entries(errors)) console.warn(`::warning::${series}: ${code}; retained last successful history if available.`);
+    if (Object.keys(errors).length) process.exitCode = 1;
 }
 
 // ---------------------------------------------------------------------------
@@ -163,29 +113,22 @@ async function buildNews() {
     return { updatedAt: new Date().toISOString(), fdic, fed };
 }
 
-// ---------------------------------------------------------------------------
 
-async function writeIfSuccessful(filename, builder) {
-    const outPath = join(dataDir, filename);
-    try {
-        const data = await builder();
-        writeFileSync(outPath, JSON.stringify(data, null, 2) + "\n");
-        console.log(`✓ wrote ${filename}`);
-        return true;
-    } catch (err) {
-        if (existsSync(outPath)) {
-            console.error(`✗ ${filename}: ${err.message} — keeping existing file`);
-        } else {
-            console.error(`✗ ${filename}: ${err.message} — no existing file to fall back on`);
-        }
-        return false;
-    }
+await buildMarkets();
+// News has the same clean-checkout issue as the SOFR recovery snapshot.
+const publishedNews = await readPublishedSnapshot("news.json");
+if (publishedNews && Array.isArray(publishedNews.fdic) && publishedNews.fdic.length
+    && Array.isArray(publishedNews.fed) && publishedNews.fed.length
+    && Number.isFinite(Date.parse(publishedNews.updatedAt))) {
+    let localUpdated = 0;
+    try { localUpdated = Date.parse(JSON.parse(readFileSync(join(dataDir, "news.json"), "utf8")).updatedAt) || 0; }
+    catch { /* Use a valid published snapshot if no local news is available. */ }
+    if (Date.parse(publishedNews.updatedAt) > localUpdated) writeSnapshot("news.json", publishedNews);
 }
-
-const results = await Promise.all([
-    writeIfSuccessful("markets.json", buildMarkets),
-    writeIfSuccessful("news.json", buildNews),
-]);
-
-// Exit 0 even on partial failure so the site still builds with prior data.
-console.log(results.every(Boolean) ? "All data fetched successfully." : "Completed with some failures.");
+try {
+    writeSnapshot("news.json", await buildNews());
+    console.log("News snapshot updated.");
+} catch {
+    console.warn("::warning::News refresh failed; retained existing news snapshot.");
+    process.exitCode = 1;
+}

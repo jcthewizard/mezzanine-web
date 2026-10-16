@@ -2,455 +2,160 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import EquityChart from "@/components/EquityChart";
 import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer,
-    CartesianGrid,
-} from "recharts";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+    SOFR_SOURCE_URL, formatMarketDate, getRangeStart, isSofrStale,
+    latestSofrSeries, parseSofrBackup, parseSofrHistory, type MarketSeries, type TimeRange,
+} from "@/lib/market-display";
 
-interface RateData {
-    date: string;
-    value: number;
-}
-
-interface MarketsData {
-    sofr: RateData[];
-    sp500: RateData[];
-    gold: RateData[];
-}
-
-type TimeRange = "30d" | "90d" | "1y" | "ytd";
-
-type MarketUnit = "rate" | "index" | "price";
-
-const MARKET_INFO = {
-    sofr: {
-        name: "SOFR",
-        fullName: "Secured Overnight Financing Rate",
-        color: "#C41E3A",
-        unit: "rate" as MarketUnit,
-    },
-    sp500: {
-        name: "S&P 500",
-        fullName: "S&P 500 Index",
-        color: "#2C3E50",
-        unit: "index" as MarketUnit,
-    },
-    gold: {
-        name: "Gold",
-        fullName: "NASDAQ Gold Index",
-        color: "#8B4513",
-        unit: "price" as MarketUnit,
-    },
-};
-
-const formatValue = (value: number, unit: MarketUnit, compact = false): string => {
-    switch (unit) {
-        case "rate":
-            return compact ? `${value.toFixed(2)}%` : `${value.toFixed(3)}%`;
-        case "index":
-            return compact
-                ? value.toLocaleString("en-US", { maximumFractionDigits: 0 })
-                : value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        case "price":
-            return compact
-                ? `$${value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
-                : `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        default:
-            return value.toString();
-    }
-};
+const HISTORY_INTERVAL = 15 * 60_000;
 
 export default function RatesCharts() {
-    const [fullData, setFullData] = useState<MarketsData | null>(null);
+    const [sofr, setSofr] = useState<MarketSeries | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
+    const [refreshError, setRefreshError] = useState(false);
     const [selectedRange, setSelectedRange] = useState<TimeRange>("90d");
+    const [now, setNow] = useState<Date | null>(null);
 
-    // Market data is fetched at build time (scripts/fetch-data.mjs) and served
-    // as a same-origin static file — all time ranges are derived client-side.
     useEffect(() => {
-        const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+        let disposed = false;
+        let pending = false;
+        let lastAttempt = 0;
+        const controllers = new Set<AbortController>();
 
-        const fetchAllData = async (attempt = 1): Promise<void> => {
-            setLoading(true);
-            setError(false);
-
+        async function fetchJson(url: string): Promise<unknown> {
+            const controller = new AbortController();
+            controllers.add(controller);
+            const timeout = window.setTimeout(() => controller.abort(), 12_000);
             try {
-                const response = await fetch("/data/markets.json", { cache: "no-cache" });
+                const response = await fetch(url, { signal: controller.signal, cache: "no-cache" });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-                const data = await response.json();
-                const { sofr, sp500, gold } = data.series ?? {};
-                if (!sofr?.length || !sp500?.length || !gold?.length) {
-                    throw new Error("Market data file is missing series");
-                }
-
-                setFullData({ sofr, sp500, gold });
-            } catch (err) {
-                console.error(`Error loading market data (attempt ${attempt}):`, err);
-                if (attempt < 3) {
-                    await delay(1000);
-                    return fetchAllData(attempt + 1);
-                }
-                setError(true);
+                return await response.json();
             } finally {
-                setLoading(false);
+                window.clearTimeout(timeout);
+                controllers.delete(controller);
             }
-        };
+        }
 
-        fetchAllData();
+        function acceptSeries(incoming: MarketSeries) {
+            if (!disposed) setSofr(previous => latestSofrSeries(previous, incoming));
+        }
+
+        async function refreshHistory() {
+            if (pending || disposed) return;
+            pending = true;
+            lastAttempt = Date.now();
+            try {
+                const endDate = new Date().toISOString().slice(0, 10);
+                const startDate = getRangeStart("1y");
+                const incoming = parseSofrHistory(await fetchJson(
+                    `https://markets.newyorkfed.org/api/rates/secured/sofr/search.json?startDate=${startDate}&endDate=${endDate}`,
+                ));
+                if (!incoming) throw new Error("No SOFR observations returned");
+                acceptSeries(incoming);
+                if (!disposed) setRefreshError(false);
+            } catch {
+                if (!disposed) setRefreshError(true);
+            } finally {
+                pending = false;
+                if (!disposed) setLoading(false);
+            }
+        }
+
+        async function loadBackup() {
+            try {
+                const incoming = parseSofrBackup(await fetchJson("/data/markets.json"));
+                if (incoming) acceptSeries(incoming);
+            } catch {
+                // The direct NY Fed feed remains useful if the static backup is unavailable.
+            }
+        }
+
+        function refreshVisible() {
+            if (document.visibilityState === "hidden") return;
+            setNow(new Date());
+            if (Date.now() - lastAttempt >= HISTORY_INTERVAL) void refreshHistory();
+        }
+
+        void loadBackup();
+        refreshVisible();
+        const interval = window.setInterval(refreshVisible, 60_000);
+        document.addEventListener("visibilitychange", refreshVisible);
+        window.addEventListener("focus", refreshVisible);
+        return () => {
+            disposed = true;
+            window.clearInterval(interval);
+            document.removeEventListener("visibilitychange", refreshVisible);
+            window.removeEventListener("focus", refreshVisible);
+            for (const controller of controllers) controller.abort();
+        };
     }, []);
 
-    // Filter full dataset to the selected time range (instant, no network call)
-    const marketsData: MarketsData | null = (() => {
-        if (!fullData) return null;
-
-        const cutoffDate = getStartDate(selectedRange);
-
-        return {
-            sofr: fullData.sofr.filter((d) => d.date >= cutoffDate),
-            sp500: fullData.sp500.filter((d) => d.date >= cutoffDate),
-            gold: fullData.gold.filter((d) => d.date >= cutoffDate),
-        };
-    })();
-
-    function getStartDate(range: TimeRange): string {
-        const today = new Date();
-        let startDate = new Date();
-
-        switch (range) {
-            case "30d":
-                startDate.setDate(today.getDate() - 30);
-                break;
-            case "90d":
-                startDate.setDate(today.getDate() - 90);
-                break;
-            case "1y":
-                startDate.setFullYear(today.getFullYear() - 1);
-                break;
-            case "ytd":
-                startDate = new Date(today.getFullYear(), 0, 1);
-                break;
-            default:
-                startDate.setDate(today.getDate() - 30);
-        }
-
-        return startDate.toISOString().split("T")[0];
-    }
-
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-        });
-    };
-
-    const formatTooltipDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-        });
-    };
-
-    const renderChart = (
-        marketKey: keyof MarketsData,
-        index: number
-    ) => {
-        const info = MARKET_INFO[marketKey];
-        const data = marketsData?.[marketKey] || [];
-
-        return (
-            <motion.div
-                key={marketKey}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white border border-border p-6"
-            >
-                {/* Chart Header */}
-                <div className="mb-6">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                        <h3 className="text-lg font-medium text-charcoal">
-                            {info.name}
-                        </h3>
-                    </div>
-                    <p className="text-slate text-sm">{info.fullName}</p>
-                </div>
-
-                {/* Chart */}
-                {loading ? (
-                    <div className="h-64 flex items-center justify-center">
-                        <p className="text-slate text-sm">Loading data...</p>
-                    </div>
-                ) : error || data.length === 0 ? (
-                    <div className="h-64 flex items-center justify-center">
-                        <p className="text-slate text-sm">Unable to load data</p>
-                    </div>
-                ) : (
-                    <ResponsiveContainer width="100%" height={250}>
-                        <LineChart data={data}>
-                            <CartesianGrid
-                                strokeDasharray="3 3"
-                                stroke="#E5E7EB"
-                                vertical={false}
-                            />
-                            <XAxis
-                                dataKey="date"
-                                tickFormatter={formatDate}
-                                stroke="#6B7280"
-                                style={{
-                                    fontSize: "12px",
-                                    fontFamily: "inherit",
-                                }}
-                                tickLine={false}
-                            />
-                            <YAxis
-                                stroke="#6B7280"
-                                style={{
-                                    fontSize: "12px",
-                                    fontFamily: "inherit",
-                                }}
-                                tickLine={false}
-                                tickFormatter={(value) => formatValue(value, info.unit, true)}
-                                domain={["auto", "auto"]}
-                            />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: "white",
-                                    border: "1px solid #E5E7EB",
-                                    borderRadius: "0",
-                                    fontSize: "14px",
-                                }}
-                                labelFormatter={formatTooltipDate}
-                                formatter={(value: number | undefined) => [
-                                    value !== undefined ? formatValue(value, info.unit) : "N/A",
-                                    info.name,
-                                ]}
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey="value"
-                                stroke={info.color}
-                                strokeWidth={2}
-                                dot={false}
-                                activeDot={{ r: 4 }}
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                )}
-
-                {/* Current Value */}
-                {!loading && !error && data.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-border">
-                        <p className="text-slate text-xs mb-1">Latest Value</p>
-                        <p className="text-2xl font-medium text-charcoal">
-                            {formatValue(data[data.length - 1].value, info.unit)}
-                        </p>
-                        <p className="text-slate text-xs mt-1">
-                            as of {formatTooltipDate(data[data.length - 1].date)}
-                        </p>
-                    </div>
-                )}
-            </motion.div>
-        );
-    };
-
-    const renderSummaryCard = () => {
-        if (!marketsData || loading) {
-            return (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: 0.3 }}
-                    className="bg-gradient-to-br from-cream to-white border border-border p-6"
-                >
-                    <div className="h-full flex items-center justify-center">
-                        <p className="text-slate text-sm">Loading comparison data...</p>
-                    </div>
-                </motion.div>
-            );
-        }
-
-        const calculateTrend = (data: RateData[]) => {
-            if (data.length < 2) return { change: 0, direction: "neutral" as "up" | "down" | "neutral" };
-            const first = data[0].value;
-            const last = data[data.length - 1].value;
-            const change = ((last - first) / first) * 100;
-            const direction: "up" | "down" | "neutral" = change > 0.01 ? "up" : change < -0.01 ? "down" : "neutral";
-            return { change, direction };
-        };
-
-        const sofrTrend = calculateTrend(marketsData.sofr);
-        const sp500Trend = calculateTrend(marketsData.sp500);
-        const goldTrend = calculateTrend(marketsData.gold);
-
-        const sofrCurrent = marketsData.sofr[marketsData.sofr.length - 1]?.value || 0;
-        const sp500Current = marketsData.sp500[marketsData.sp500.length - 1]?.value || 0;
-        const goldCurrent = marketsData.gold[marketsData.gold.length - 1]?.value || 0;
-
-        const TrendIcon = ({ direction }: { direction: "up" | "down" | "neutral" }) => {
-            if (direction === "up") return <TrendingUp size={14} className="text-green-600" />;
-            if (direction === "down") return <TrendingDown size={14} className="text-red" />;
-            return <Minus size={14} className="text-slate" />;
-        };
-
-        const summaryItems = [
-            {
-                name: "SOFR",
-                current: formatValue(sofrCurrent, "rate"),
-                trend: sofrTrend,
-                color: MARKET_INFO.sofr.color,
-                colorClass: "bg-red",
-                bgClass: "bg-red/20",
-            },
-            {
-                name: "S&P 500",
-                current: formatValue(sp500Current, "index"),
-                trend: sp500Trend,
-                color: MARKET_INFO.sp500.color,
-                colorClass: "bg-charcoal",
-                bgClass: "bg-charcoal/20",
-            },
-            {
-                name: "Gold",
-                current: formatValue(goldCurrent, "price"),
-                trend: goldTrend,
-                color: MARKET_INFO.gold.color,
-                colorClass: "",
-                bgClass: "",
-            },
-        ];
-
-        // Determine key insight
-        const biggestMover = [
-            { name: "SOFR", change: Math.abs(sofrTrend.change) },
-            { name: "S&P 500", change: Math.abs(sp500Trend.change) },
-            { name: "Gold", change: Math.abs(goldTrend.change) },
-        ].reduce((max, item) => (item.change > max.change ? item : max));
-
-        return (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="bg-gradient-to-br from-cream to-white border border-border p-6"
-            >
-                {/* Header */}
-                <div className="mb-6">
-                    <h3 className="text-lg font-medium text-charcoal mb-2">
-                        Market Snapshot
-                    </h3>
-                    <p className="text-slate text-sm">
-                        Current levels and trends over selected period
-                    </p>
-                </div>
-
-                {/* Market Items */}
-                <div className="space-y-4 mb-6">
-                    {summaryItems.map((item) => (
-                        <div key={item.name}>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium text-charcoal">{item.name}</span>
-                                <div className="flex items-center gap-2">
-                                    <TrendIcon direction={item.trend.direction} />
-                                    <span className="text-sm text-slate">
-                                        {item.trend.change > 0 ? "+" : ""}{item.trend.change.toFixed(1)}%
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div
-                                    className="h-2 relative overflow-hidden flex-1"
-                                    style={{ backgroundColor: `${item.color}33` }}
-                                >
-                                    <div
-                                        className="h-full transition-all duration-500"
-                                        style={{
-                                            backgroundColor: item.color,
-                                            width: `${Math.min(100, Math.max(20, 50 + item.trend.change * 2))}%`,
-                                        }}
-                                    />
-                                </div>
-                                <span className="text-lg font-medium text-charcoal min-w-[5.5rem] text-right">
-                                    {item.current}
-                                </span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Key Insight */}
-                <div className="pt-4 border-t border-border">
-                    <p className="text-xs text-slate mb-2">Key Insight</p>
-                    <p className="text-sm text-charcoal leading-relaxed">
-                        {biggestMover.name} is the biggest mover over this period
-                        ({biggestMover.change > 0 ? "+" : ""}{biggestMover.change.toFixed(1)}%).
-                        {biggestMover.change > 5
-                            ? " Significant market movement detected."
-                            : " Markets are relatively stable over the selected period."}
-                    </p>
-                </div>
-            </motion.div>
-        );
-    };
+    const latest = sofr?.points[sofr.points.length - 1];
+    const data = now ? (sofr?.points ?? []).filter(point => point.date >= getRangeStart(selectedRange, now)) : [];
+    const stale = Boolean(latest && now && isSofrStale(latest.date, now));
 
     return (
         <section className="py-24 lg:py-32 bg-white">
             <div className="max-w-7xl mx-auto px-6 lg:px-12">
-                {/* Section Header */}
                 <div className="mb-12">
-                    <p className="text-red text-sm tracking-[0.2em] uppercase mb-4">
-                        Market Data
-                    </p>
-                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-                        <h2 className="font-serif text-3xl md:text-4xl text-charcoal leading-tight">
-                            Market Indicators
-                        </h2>
-
-                        {/* Time Range Selector */}
-                        <div className="flex gap-2">
-                            {(["30d", "90d", "1y", "ytd"] as TimeRange[]).map(
-                                (range) => (
-                                    <button
-                                        key={range}
-                                        onClick={() => setSelectedRange(range)}
-                                        className={`px-4 py-2 text-sm tracking-wide transition-colors ${selectedRange === range
-                                            ? "bg-red text-white"
-                                            : "bg-cream text-charcoal hover:bg-red hover:text-white"
-                                            }`}
-                                    >
-                                        {range === "ytd" ? "YTD" : range.toUpperCase()}
-                                    </button>
-                                )
-                            )}
-                        </div>
-                    </div>
+                    <p className="text-red text-sm tracking-[0.2em] uppercase mb-4">Market Data</p>
+                    <h2 className="font-serif text-3xl md:text-4xl text-charcoal leading-tight">Market Indicators</h2>
+                    <p className="text-slate text-sm mt-4">Current market charts and the latest published overnight financing rate.</p>
                 </div>
-
-                {/* Charts Grid */}
                 <div className="grid md:grid-cols-2 gap-6">
-                    {renderChart("sofr", 0)}
-                    {renderChart("sp500", 1)}
-                    {renderChart("gold", 2)}
-                    {renderSummaryCard()}
+                    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="bg-white border border-border p-6 min-w-0">
+                        <h3 className="text-lg font-medium text-charcoal mb-2">SOFR</h3>
+                        <p className="text-slate text-sm mb-5">Secured Overnight Financing Rate</p>
+                        <div className="mb-5 min-h-20" aria-live="polite" aria-atomic="true">
+                            <p className="text-slate text-xs mb-1">Latest published rate</p>
+                            {latest ? <>
+                                <p className="text-2xl font-medium text-charcoal">{latest.value.toFixed(3)}%</p>
+                                <p className="text-slate text-xs mt-1">Effective {formatMarketDate(latest.date, true)}</p>
+                            </> : <p className="text-slate text-sm mt-2">{loading ? "Loading published rate…" : "Published rate temporarily unavailable."}</p>}
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-5" role="group" aria-label="SOFR history range">
+                            {(["30d", "90d", "1y", "ytd"] as TimeRange[]).map(range => (
+                                <button key={range} type="button" onClick={() => setSelectedRange(range)} aria-pressed={selectedRange === range}
+                                    className={`px-4 py-2 text-sm tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red ${selectedRange === range ? "bg-red text-white" : "bg-cream text-charcoal hover:bg-red hover:text-white"}`}>
+                                    {range === "ytd" ? "YTD" : range.toUpperCase()}
+                                </button>
+                            ))}
+                        </div>
+                        {data.length ? <div role="img" aria-label={`SOFR history, ${formatMarketDate(data[0].date, true)} to ${formatMarketDate(data[data.length - 1].date, true)}. Most recent rate ${data[data.length - 1].value.toFixed(3)} percent.`}>
+                            <ResponsiveContainer width="100%" height={250}>
+                                <LineChart data={data} margin={{ top: 8, right: 10, bottom: 0, left: 0 }} accessibilityLayer>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+                                    <XAxis dataKey="date" tickFormatter={value => formatMarketDate(value)} stroke="#6B7280" style={{ fontSize: "12px", fontFamily: "inherit" }} tickLine={false} minTickGap={24} />
+                                    <YAxis stroke="#6B7280" style={{ fontSize: "12px", fontFamily: "inherit" }} tickLine={false} width={60} tickFormatter={value => `${value.toFixed(2)}%`} domain={["auto", "auto"]} />
+                                    <Tooltip contentStyle={{ backgroundColor: "white", border: "1px solid #E5E7EB", borderRadius: "0", fontSize: "14px" }}
+                                        labelFormatter={value => formatMarketDate(String(value), true)}
+                                        formatter={(value: number | undefined) => [value === undefined ? "Unavailable" : `${value.toFixed(3)}%`, "SOFR"]} />
+                                    <Line type="monotone" dataKey="value" stroke="#C41E3A" strokeWidth={2} dot={data.length === 1} activeDot={{ r: 4 }} isAnimationActive={false} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div> : <div className="h-[250px] flex items-center justify-center bg-cream/40 px-5 text-center">
+                            <p className="text-slate text-sm leading-relaxed">{loading ? "Loading history…" : sofr ? "No observations in this period. Select a longer range." : "Rate history is temporarily unavailable. Open the source below for published rates."}</p>
+                        </div>}
+                        <div className="mt-4 pt-4 border-t border-border text-xs text-slate space-y-2">
+                            <p>Published the next business day, around 8 a.m. ET.</p>
+                            {(refreshError || stale) && latest && <p className="text-red" role="status">{stale ? "Rate data may be out of date." : "Rate refresh unavailable."} Showing the last available observations.</p>}
+                            <p>Source: <a className="underline underline-offset-2 hover:text-charcoal" href={SOFR_SOURCE_URL} target="_blank" rel="noopener noreferrer">Federal Reserve Bank of New York</a></p>
+                        </div>
+                    </motion.div>
+                    <EquityChart market="equity" />
+                    <EquityChart market="gold" />
+                    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.3 }} className="bg-gradient-to-br from-cream to-white border border-border p-6">
+                        <h3 className="text-lg font-medium text-charcoal mb-6">About these indicators</h3>
+                        <dl className="space-y-6 text-sm">
+                            <div><dt className="font-medium text-charcoal mb-2">Gold</dt><dd className="text-slate leading-relaxed">OANDA’s gold / U.S. dollar chart shows the price per troy ounce. Its quote and history come from the same market feed.</dd></div>
+                            <div><dt className="font-medium text-charcoal mb-2">SOFR</dt><dd className="text-slate leading-relaxed">The New York Fed publishes one rate per business day. The date shown is the rate’s effective date, so it normally precedes the publication date. This page checks for new rates every 15 minutes while visible.</dd></div>
+                            <div><dt className="font-medium text-charcoal mb-2">S&amp;P 500 exposure</dt><dd className="text-slate leading-relaxed">SPDR S&amp;P 500 ETF (SPY) tracks an exchange-traded fund. Prices are USD per share and may be delayed.</dd></div>
+                        </dl>
+                        <p className="mt-6 pt-4 border-t border-border text-xs text-slate leading-relaxed">Gold and equity charts refresh through TradingView and have their own range controls. Refer to each chart for quote time, data delays, and market status. Market closures affect when new prices become available.</p>
+                    </motion.div>
                 </div>
-
-                {/* Data Source Attribution */}
-                <p className="text-slate text-xs mt-8 text-center">
-                    Data source: Federal Reserve Economic Data (FRED)
-                </p>
             </div>
         </section>
     );

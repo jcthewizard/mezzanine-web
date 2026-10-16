@@ -1,57 +1,57 @@
 {
-  "updatedAt": "2026-08-08T01:34:04.922Z",
+  "updatedAt": "2026-10-16T22:23:02.784Z",
   "fdic": [
     {
       "title": "Press Release: FDIC Issues List of Banks Examined for CRA Compliance",
-      "link": "https://content.govdelivery.com/accounts/USFDIC/bulletins/421aaa6",
-      "pubDate": "Wed, 05 Aug 2026 09:03:31 -0500"
+      "link": "https://content.govdelivery.com/accounts/USFDIC/bulletins/42df9e7",
+      "pubDate": "Mon, 05 Oct 2026 09:31:24 -0500"
     },
     {
-      "title": "Press Release: FDIC Launches New Office of Supervisory Appeals",
-      "link": "https://content.govdelivery.com/accounts/USFDIC/bulletins/423929b",
-      "pubDate": "Tue, 04 Aug 2026 11:52:41 -0500"
+      "title": "Press Release: FDIC Announces Conclusion of Independent Monitorship",
+      "link": "https://content.govdelivery.com/accounts/USFDIC/bulletins/42d4814",
+      "pubDate": "Wed, 30 Sep 2026 16:01:19 -0500"
     },
     {
-      "title": "Press Release: FDIC Approves the Deposit Insurance Application for Augustus National Bank, N.A., Dallas, Texas",
-      "link": "https://content.govdelivery.com/accounts/USFDIC/bulletins/4238e4a",
-      "pubDate": "Tue, 04 Aug 2026 09:07:06 -0500"
+      "title": "Press Release: Agencies Publish Resolution Plan Feedback Letters for 15 Banking Organizations",
+      "link": "https://content.govdelivery.com/accounts/USFDIC/bulletins/42c31dd",
+      "pubDate": "Tue, 29 Sep 2026 15:02:30 -0500"
     },
     {
-      "title": "Press Release: Joint Statement of Enforcement Policy in support of Venezuela’s Economic Recovery and Earthquake Relief Efforts",
-      "link": "https://content.govdelivery.com/accounts/USFDIC/bulletins/42305d8",
-      "pubDate": "Fri, 31 Jul 2026 14:41:17 -0500"
+      "title": "Press Release: Sunwest Bank Assumes All Deposits and Certain Assets of Nano Banc, Irvine, California",
+      "link": "https://content.govdelivery.com/accounts/USFDIC/bulletins/42c8901",
+      "pubDate": "Fri, 25 Sep 2026 18:09:49 -0500"
     },
     {
-      "title": "FDIC Board of Directors Approve New Actions",
-      "link": "https://content.govdelivery.com/accounts/USFDIC/bulletins/422e02c",
-      "pubDate": "Fri, 31 Jul 2026 10:51:05 -0500"
+      "title": "Press Release: FDIC Publishes Enforcement Orders for August 2026",
+      "link": "https://content.govdelivery.com/accounts/USFDIC/bulletins/42c4c99",
+      "pubDate": "Fri, 25 Sep 2026 09:01:45 -0500"
     }
   ],
   "fed": [
     {
-      "title": "Federal Reserve Board announces approval of the application by Coastal Bend Bancshares, Inc.",
-      "link": "https://www.federalreserve.gov/newsevents/pressreleases/orders20260804c.htm",
-      "pubDate": "Tue, 4 Aug 2026 20:30:00 GMT"
+      "title": "Federal Reserve Board announces termination of enforcement actions with Gardner Bancshares, Inc. and Small Business Bank",
+      "link": "https://www.federalreserve.gov/newsevents/pressreleases/enforcement20261016a.htm",
+      "pubDate": "Fri, 16 Oct 2026 15:00:00 GMT"
     },
     {
-      "title": "Federal Reserve Board announces approval of the application by FS Bancorp, Inc.",
-      "link": "https://www.federalreserve.gov/newsevents/pressreleases/orders20260804b.htm",
-      "pubDate": "Tue, 4 Aug 2026 20:30:00 GMT"
+      "title": "Minutes of the Board's discount rate meetings on August 17, September 9, and September 16, 2026",
+      "link": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20261013a.htm",
+      "pubDate": "Tue, 13 Oct 2026 18:00:00 GMT"
     },
     {
-      "title": "Federal Reserve Board announces approval of the application by Banco Santander, S.A. and Santander Holdings USA, Inc.",
-      "link": "https://www.federalreserve.gov/newsevents/pressreleases/orders20260804a.htm",
-      "pubDate": "Tue, 4 Aug 2026 20:30:00 GMT"
+      "title": "Federal Reserve Board releases results of the 2025 Survey of Consumer Finances, which provides the public and policymakers with detailed insights into the economic condition of American families",
+      "link": "https://www.federalreserve.gov/newsevents/pressreleases/other20261009a.htm",
+      "pubDate": "Fri, 9 Oct 2026 14:00:00 GMT"
     },
     {
-      "title": "Federal Reserve Board requests comment on a proposal to modernize its rule governing the extension of credit to bank \"insiders\"—bank executives, board members and major shareholders who could potentially influence a bank's lending decisions",
-      "link": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20260731b.htm",
-      "pubDate": "Fri, 31 Jul 2026 14:00:00 GMT"
+      "title": "Federal Reserve Board announces enforcement action against American Express Company to address, among other things, the firm’s failure to sufficiently detect and report certain suspicious activity related to money laundering",
+      "link": "https://www.federalreserve.gov/newsevents/pressreleases/enforcement20261008a.htm",
+      "pubDate": "Thu, 8 Oct 2026 20:30:00 GMT"
     },
     {
-      "title": "Federal Reserve Board requests comment on a proposal to modernize rules for mutual banking organizations",
-      "link": "https://www.federalreserve.gov/newsevents/pressreleases/bcreg20260731a.htm",
-      "pubDate": "Fri, 31 Jul 2026 14:00:00 GMT"
+      "title": "Minutes of the Federal Open Market Committee, September 15-16, 2026",
+      "link": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20261007a.htm",
+      "pubDate": "Wed, 7 Oct 2026 18:00:00 GMT"
     }
   ]
 }

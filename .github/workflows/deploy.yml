@@ -4,8 +4,8 @@ on:
   push:
     branches: ["main"]
   schedule:
-    # Refresh market data and news feeds every 6 hours
-    - cron: "0 */6 * * *"
+    # News + recovery snapshots only. Live charts do not depend on this schedule.
+    - cron: "17 */6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -20,6 +20,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      data_outcome: ${{ steps.data.outcome }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,16 +29,19 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
       - name: Fetch market data and news feeds
-        run: node scripts/fetch-data.mjs
-        env:
-          FRED_API_KEY: ${{ secrets.NEXT_PUBLIC_FRED_API_KEY }}
+        id: data
+        continue-on-error: true
+        run: npm run fetch:data
+
+      - name: Check market-data behavior
+        run: npm test
 
       - name: Build
         run: npm run build
@@ -57,3 +62,8 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+      - name: Report degraded snapshot refresh
+        if: needs.build.outputs.data_outcome == 'failure'
+        run: |
+          echo '::error::Site deployed with available data, but a snapshot refresh failed. Inspect the data-fetch step; live charts still refresh independently.'
+          exit 1
