@@ -44,9 +44,13 @@ does not serve a static export. For a local preview, run `python3 -m http.server
 Market charts update in the browser, independently of GitHub Actions or website
 deployments. No API keys, Cloudflare account, or paid service is needed.
 
-- **Gold:** TradingView's free embedded OANDA `XAUUSD` chart, labeled in USD per
-  troy ounce. The provider supplies both chart history and its latest quote.
-- **Equities:** TradingView's free embedded `AMEX:SPY` chart, explicitly labeled
+- **Gold:** A custom chart fetches Standard Bullion's public history and dealer
+  quotes directly in the browser. The latest dealer **ask** is shown separately
+  from daily closing history, with provider timestamps and USD-per-troy-ounce
+  labels. Earlier history includes published benchmark data. The visible
+  "Data by Standard Bullion" link credits the source; raw gold data is never
+  republished in this repository or the site's static snapshots.
+- **Equities:** A compact, styled TradingView `AMEX:SPY` chart, explicitly labeled
   **SPDR S&P 500 ETF (SPY)** in USD per share. This is an ETF tracking the S&P 500,
   not the official index level. Quote delays and provider branding stay visible.
 - **SOFR:** The browser requests the New York Fed's public SOFR API directly,
@@ -57,9 +61,10 @@ deployments. No API keys, Cloudflare account, or paid service is needed.
 
 SOFR can fall back to a validated snapshot in `public/data/markets.json`. A failed
 request retains the last good data and displays a warning. An unavailable value
-is never represented as zero. Gold and equities have provider links if embedded
-charts are blocked or unavailable; their status and timestamps belong to the
-provider, not to the site's build time.
+is never represented as zero. Gold retains the last good quote and history in
+memory when a refresh fails, with a visible warning. Each card has a provider
+link if a feed or embedded chart is unavailable. Provider timestamps are never
+replaced with the site's build time.
 
 `npm run fetch:data` updates the SOFR recovery snapshot and existing news feeds.
 Each refresh reports failure explicitly; the deployment workflow can publish
@@ -78,6 +83,8 @@ npm run build
 ```
 
 Provider references: [NY Fed SOFR API](https://markets.newyorkfed.org/static/docs/markets-api.html),
+[Standard Bullion gold API](https://standardbullion.com/gold-price-api),
+[Standard Bullion data terms](https://standardbullion.com/market-data),
 [TradingView free widgets](https://www.tradingview.com/widget/),
 [widget data and delay rules](https://www.tradingview.com/widget-docs/faq/data/).
 

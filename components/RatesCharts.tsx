@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import EquityChart from "@/components/EquityChart";
+import GoldChart from "@/components/GoldChart";
 import {
     SOFR_SOURCE_URL, formatMarketDate, getRangeStart, isSofrStale,
     latestSofrSeries, parseSofrBackup, parseSofrHistory, type MarketSeries, type TimeRange,
@@ -108,14 +109,7 @@ export default function RatesCharts() {
                     <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="bg-white border border-border p-6 min-w-0">
                         <h3 className="text-lg font-medium text-charcoal mb-2">SOFR</h3>
                         <p className="text-slate text-sm mb-5">Secured Overnight Financing Rate</p>
-                        <div className="mb-5 min-h-20" aria-live="polite" aria-atomic="true">
-                            <p className="text-slate text-xs mb-1">Latest published rate</p>
-                            {latest ? <>
-                                <p className="text-2xl font-medium text-charcoal">{latest.value.toFixed(3)}%</p>
-                                <p className="text-slate text-xs mt-1">Effective {formatMarketDate(latest.date, true)}</p>
-                            </> : <p className="text-slate text-sm mt-2">{loading ? "Loading published rate…" : "Published rate temporarily unavailable."}</p>}
-                        </div>
-                        <div className="flex flex-wrap gap-2 mb-5" role="group" aria-label="SOFR history range">
+                        <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="SOFR history range">
                             {(["30d", "90d", "1y", "ytd"] as TimeRange[]).map(range => (
                                 <button key={range} type="button" onClick={() => setSelectedRange(range)} aria-pressed={selectedRange === range}
                                     className={`px-4 py-2 text-sm tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red ${selectedRange === range ? "bg-red text-white" : "bg-cream text-charcoal hover:bg-red hover:text-white"}`}>
@@ -139,21 +133,27 @@ export default function RatesCharts() {
                             <p className="text-slate text-sm leading-relaxed">{loading ? "Loading history…" : sofr ? "No observations in this period. Select a longer range." : "Rate history is temporarily unavailable. Open the source below for published rates."}</p>
                         </div>}
                         <div className="mt-4 pt-4 border-t border-border text-xs text-slate space-y-2">
-                            <p>Published the next business day, around 8 a.m. ET.</p>
+                            <div aria-live="polite" aria-atomic="true">
+                                <p className="mb-1">Latest published rate</p>
+                                {latest ? <>
+                                    <p className="text-2xl font-medium text-charcoal">{latest.value.toFixed(3)}%</p>
+                                    <p className="mt-1">Effective {formatMarketDate(latest.date, true)}</p>
+                                </> : <p>{loading ? "Loading published rate…" : "Published rate temporarily unavailable."}</p>}
+                            </div>
                             {(refreshError || stale) && latest && <p className="text-red" role="status">{stale ? "Rate data may be out of date." : "Rate refresh unavailable."} Showing the last available observations.</p>}
                             <p>Source: <a className="underline underline-offset-2 hover:text-charcoal" href={SOFR_SOURCE_URL} target="_blank" rel="noopener noreferrer">Federal Reserve Bank of New York</a></p>
                         </div>
                     </motion.div>
-                    <EquityChart market="equity" />
-                    <EquityChart market="gold" />
+                    <EquityChart />
+                    <GoldChart />
                     <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.3 }} className="bg-gradient-to-br from-cream to-white border border-border p-6">
-                        <h3 className="text-lg font-medium text-charcoal mb-6">About these indicators</h3>
-                        <dl className="space-y-6 text-sm">
-                            <div><dt className="font-medium text-charcoal mb-2">Gold</dt><dd className="text-slate leading-relaxed">OANDA’s gold / U.S. dollar chart shows the price per troy ounce. Its quote and history come from the same market feed.</dd></div>
-                            <div><dt className="font-medium text-charcoal mb-2">SOFR</dt><dd className="text-slate leading-relaxed">The New York Fed publishes one rate per business day. The date shown is the rate’s effective date, so it normally precedes the publication date. This page checks for new rates every 15 minutes while visible.</dd></div>
-                            <div><dt className="font-medium text-charcoal mb-2">S&amp;P 500 exposure</dt><dd className="text-slate leading-relaxed">SPDR S&amp;P 500 ETF (SPY) tracks an exchange-traded fund. Prices are USD per share and may be delayed.</dd></div>
+                        <h3 className="text-lg font-medium text-charcoal mb-5">About these indicators</h3>
+                        <dl className="space-y-5 text-sm">
+                            <div><dt className="font-medium text-charcoal mb-1">Gold</dt><dd className="text-slate leading-relaxed">Standard Bullion’s latest dealer ask and daily price history, in USD per troy ounce. Earlier history includes published benchmark prices.</dd></div>
+                            <div><dt className="font-medium text-charcoal mb-1">SOFR</dt><dd className="text-slate leading-relaxed">The New York Fed’s overnight financing rate, published the next business day. Dates show when the rate applies.</dd></div>
+                            <div><dt className="font-medium text-charcoal mb-1">S&amp;P 500 exposure</dt><dd className="text-slate leading-relaxed">SPY tracks the S&amp;P 500. Its share price differs from the index level, and quotes may be delayed.</dd></div>
                         </dl>
-                        <p className="mt-6 pt-4 border-t border-border text-xs text-slate leading-relaxed">Gold and equity charts refresh through TradingView and have their own range controls. Refer to each chart for quote time, data delays, and market status. Market closures affect when new prices become available.</p>
+                        <p className="mt-5 pt-4 border-t border-border text-xs text-slate leading-relaxed">Prices refresh automatically. Each source follows its own publication schedule and market hours.</p>
                     </motion.div>
                 </div>
             </div>
