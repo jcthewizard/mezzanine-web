@@ -50,9 +50,15 @@ deployments. No API keys, Cloudflare account, or paid service is needed.
   labels. Earlier history includes published benchmark data. The visible
   "Data by Standard Bullion" link credits the source; raw gold data is never
   republished in this repository or the site's static snapshots.
-- **Equities:** A compact, styled TradingView `AMEX:SPY` chart, explicitly labeled
-  **SPDR S&P 500 ETF (SPY)** in USD per share. This is an ETF tracking the S&P 500,
-  not the official index level. Quote delays and provider branding stay visible.
+- **Equities:** A custom SPY chart uses GetMarketHistory's anonymous hourly stock
+  history, with no embedded widget. It plots the last available non-gap hourly
+  price per New York trading date, including extended hours. These are unadjusted
+  prices in USD per share, not official closing-auction prices or the index level.
+  The feed is **delayed at least 48 hours**, not a live quote feed. The card shows
+  the latest bar's actual end time in Eastern time, its delay, and a source link.
+  History refreshes hourly while visible and uses the same 30D/90D/1Y/YTD controls
+  as gold and SOFR. Only a derived daily chart is displayed; raw hourly bars are
+  fetched directly by the browser and never republished in static snapshots.
 - **SOFR:** The browser requests the New York Fed's public SOFR API directly,
   refreshing periodically and when the page becomes visible. Dates are effective
   dates, not the publication date. The rate is normally published on business days
@@ -61,15 +67,15 @@ deployments. No API keys, Cloudflare account, or paid service is needed.
 
 SOFR can fall back to a validated snapshot in `public/data/markets.json`. A failed
 request retains the last good data and displays a warning. An unavailable value
-is never represented as zero. Gold retains the last good quote and history in
+is never represented as zero. Gold and SPY retain their last good observations in
 memory when a refresh fails, with a visible warning. Each card has a provider
-link if a feed or embedded chart is unavailable. Provider timestamps are never
+link if a feed is unavailable. Provider timestamps are never
 replaced with the site's build time.
 
 `npm run fetch:data` updates the SOFR recovery snapshot and existing news feeds.
 Each refresh reports failure explicitly; the deployment workflow can publish
 available data and then report a failed refresh. The six-hour GitHub schedule is
-only for recovery snapshots and news. Live market charts do not depend on it,
+only for recovery snapshots and news. Browser market charts do not depend on it,
 so GitHub's inactivity suspension no longer freezes their prices.
 
 The legacy FRED gold strategy index and S&P index snapshots have been removed.
@@ -85,8 +91,9 @@ npm run build
 Provider references: [NY Fed SOFR API](https://markets.newyorkfed.org/static/docs/markets-api.html),
 [Standard Bullion gold API](https://standardbullion.com/gold-price-api),
 [Standard Bullion data terms](https://standardbullion.com/market-data),
-[TradingView free widgets](https://www.tradingview.com/widget/),
-[widget data and delay rules](https://www.tradingview.com/widget-docs/faq/data/).
+[GetMarketHistory anonymous access](https://getmarkethistory.com/docs/quickstart),
+[history coverage and delay](https://getmarkethistory.com/docs/coverage/),
+[derived-chart usage terms](https://getmarkethistory.com/docs/terms/).
 
 ## Project Structure
 

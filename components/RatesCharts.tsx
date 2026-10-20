@@ -151,7 +151,7 @@ export default function RatesCharts() {
                         <dl className="space-y-5 text-sm">
                             <div><dt className="font-medium text-charcoal mb-1">Gold</dt><dd className="text-slate leading-relaxed">Standard Bullion’s latest dealer ask and daily price history, in USD per troy ounce. Earlier history includes published benchmark prices.</dd></div>
                             <div><dt className="font-medium text-charcoal mb-1">SOFR</dt><dd className="text-slate leading-relaxed">The New York Fed’s overnight financing rate, published the next business day. Dates show when the rate applies.</dd></div>
-                            <div><dt className="font-medium text-charcoal mb-1">S&amp;P 500 exposure</dt><dd className="text-slate leading-relaxed">SPY tracks the S&amp;P 500. Its share price differs from the index level, and quotes may be delayed.</dd></div>
+                            <div><dt className="font-medium text-charcoal mb-1">S&amp;P 500 exposure</dt><dd className="text-slate leading-relaxed">SPY tracks the S&amp;P 500; its share price differs from the index level. The chart shows each day’s last available hourly price, including extended hours, delayed at least 48 hours.</dd></div>
                         </dl>
                         <p className="mt-5 pt-4 border-t border-border text-xs text-slate leading-relaxed">Prices refresh automatically. Each source follows its own publication schedule and market hours.</p>
                     </motion.div>
